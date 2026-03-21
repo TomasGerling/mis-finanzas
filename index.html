@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Finanzas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg:#0f0f0f;--bg2:#181818;--bg3:#222222;
+    --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+    --text:#f0efe9;--text2:#888;--text3:#555;
+    --green:#4ade80;--green-bg:rgba(74,222,128,0.08);
+    --red:#f87171;--red-bg:rgba(248,113,113,0.08);
+    --orange:#fb923c;--orange-bg:rgba(251,146,60,0.08);
+    --blue:#60a5fa;--blue-bg:rgba(96,165,250,0.08);
+    --yellow:#fbbf24;
+    --accent:#e8ff5a;--accent-dark:#c8e000;
+    --radius:12px;--radius-sm:8px;
+    --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;}
+  .app-shell{display:flex;min-height:100vh;}
+  .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;overflow:hidden;}
+  .sidebar-logo{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--accent);letter-spacing:.05em;padding:0 8px 20px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+  .sidebar-logo span{display:block;font-size:10px;color:var(--text3);margin-top:2px;font-weight:400;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;border:1px solid transparent;user-select:none;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:var(--accent);color:#000;font-weight:600;border-color:var(--accent-dark);}
+  .nav-icon{font-size:15px;width:20px;text-align:center;}
+  .sidebar-section{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;padding:16px 10px 6px;}
+  .saldo-widget{margin-top:auto;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+  .saldo-widget .label{font-size:11px;color:var(--text3);margin-bottom:4px;font-family:var(--mono);}
+  .saldo-widget .amount{font-family:var(--mono);font-size:20px;font-weight:500;}
+  .amount.pos{color:var(--green);}.amount.neg{color:var(--red);}.amount.warn{color:var(--orange);}
+  .main{flex:1;padding:32px;overflow-y:auto;min-width:0;}
+  .screen{display:none;}.screen.active{display:block;}
+  .page-title{font-size:22px;font-weight:600;color:var(--text);margin-bottom:6px;}
+  .page-subtitle{font-size:13px;color:var(--text2);margin-bottom:28px;}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+  .card-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:16px;}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;}
+  .metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+  .metric-label{font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;}
+  .metric-value{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text);}
+  .metric-value.green{color:var(--green);}.metric-value.red{color:var(--red);}.metric-value.orange{color:var(--orange);}.metric-value.yellow{color:var(--yellow);}
+  .alert{border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:10px;border:1px solid;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .alert.danger{background:var(--red-bg);border-color:rgba(248,113,113,.25);color:var(--red);}
+  .alert.warning{background:var(--orange-bg);border-color:rgba(251,146,60,.25);color:var(--orange);}
+  .list-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px;font-size:13px;}
+  .list-row:last-child{border-bottom:none;}
+  .list-row .main-info{flex:1;min-width:0;}
+  .list-row .main-info strong{display:block;color:var(--text);}
+  .list-row .main-info .sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:1px;}
+  .list-row .amount-col{font-family:var(--mono);font-size:14px;font-weight:500;white-space:nowrap;}
+  .list-row.paid{opacity:.4;}.list-row.paid .main-info strong{text-decoration:line-through;}
+  .badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;font-family:var(--mono);white-space:nowrap;letter-spacing:.03em;}
+  .badge.red{background:var(--red-bg);color:var(--red);border:1px solid rgba(248,113,113,.2);}
+  .badge.orange{background:var(--orange-bg);color:var(--orange);border:1px solid rgba(251,146,60,.2);}
+  .badge.blue{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(96,165,250,.2);}
+  .badge.green{background:var(--green-bg);color:var(--green);border:1px solid rgba(74,222,128,.2);}
+  .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px;}
+  .form-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px;}
+  .form-full{margin-bottom:10px;}
+  .form-label{display:block;font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:5px;letter-spacing:.04em;}
+  input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;color:var(--text);font-family:var(--sans);outline:none;transition:border-color .15s;-webkit-appearance:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+  input::placeholder{color:var(--text3);}
+  select option{background:var(--bg3);}
+  .btn{padding:9px 18px;border-radius:var(--radius-sm);border:1px solid var(--border2);font-size:13px;font-family:var(--sans);font-weight:500;cursor:pointer;transition:all .15s;background:transparent;color:var(--text2);}
+  .btn:hover{background:var(--bg3);color:var(--text);}
+  .btn-primary{background:var(--accent);color:#000;border-color:var(--accent-dark);font-weight:600;}
+  .btn-primary:hover{background:var(--accent-dark);color:#000;}
+  .btn-danger-sm{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
+  .btn-danger-sm:hover{background:rgba(248,113,113,.15);}
+  .btn-success-sm{background:var(--green-bg);color:var(--green);border-color:rgba(74,222,128,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
+  .btn-success-sm:hover{background:rgba(74,222,128,.15);}
+  .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);}
+  .tab{padding:8px 14px;font-size:12px;font-family:var(--mono);cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .tab:hover{color:var(--text);}
+  .empty{text-align:center;padding:32px 16px;color:var(--text3);font-size:13px;font-family:var(--mono);}
+  .mini-chart{display:flex;align-items:flex-end;gap:6px;height:72px;padding-top:8px;}
+  .chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
+  .chart-bar{width:100%;border-radius:4px 4px 0 0;background:var(--accent);min-height:3px;transition:height .4s ease;}
+  .chart-day{font-size:10px;color:var(--text3);font-family:var(--mono);}
+  .chart-val{font-size:10px;color:var(--text2);font-family:var(--mono);}
+  .progress-wrap{margin-top:10px;}
+  .progress-label{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:5px;}
+  .progress-bar{height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:99px;background:var(--accent);transition:width .5s ease;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 18px;font-size:13px;font-family:var(--mono);color:var(--text);z-index:9999;transform:translateY(80px);opacity:0;transition:all .25s ease;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.success{border-color:rgba(74,222,128,.3);color:var(--green);}
+  .toast.error{border-color:rgba(248,113,113,.3);color:var(--red);}
+  .toast.info{border-color:rgba(96,165,250,.3);color:var(--blue);}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .sync-bar{display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono);color:var(--text3);padding:0 8px 16px;border-bottom:1px solid var(--border);margin-bottom:4px;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+  .sync-dot.off{background:var(--red);}
+  .sync-dot.loading{background:var(--yellow);animation:pulse .8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:1000;font-family:var(--mono);color:var(--text2);font-size:13px;}
+  .loading-spinner{width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(max-width:700px){.sidebar{display:none;}.main{padding:16px;}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid{grid-template-columns:1fr;}.form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}.two-col{grid-template-columns:1fr;}}
+  ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+  <span>Conectando con la base de datos...</span>
+</div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">MIS FINANZAS<span>negocio · personal</span></div>
+    <div class="sync-bar"><div class="sync-dot loading" id="sync-dot"></div><span id="sync-text">conectando...</span></div>
+    <div class="sidebar-section">Principal</div>
+    <div class="nav-item active" onclick="goTo('resumen',this)"><span class="nav-icon">◈</span> Resumen</div>
+    <div class="nav-item" onclick="goTo('ventas',this)"><span class="nav-icon">↑</span> Ventas</div>
+    <div class="sidebar-section">Egresos</div>
+    <div class="nav-item" onclick="goTo('gastos-diarios',this)"><span class="nav-icon">🛒</span> Gastos del día</div>
+    <div class="nav-item" onclick="goTo('boletas',this)"><span class="nav-icon">◻</span> Boletas</div>
+    <div class="nav-item" onclick="goTo('fijos',this)"><span class="nav-icon">⟳</span> Gastos fijos</div>
+    <div class="saldo-widget">
+      <div class="label">SALDO DISPONIBLE</div>
+      <div class="amount pos" id="sidebar-amount">—</div>
+      <div class="progress-wrap" id="sidebar-progress" style="display:none">
+        <div class="progress-label"><span id="prog-left">—</span><span id="prog-right">—</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- RESUMEN -->
+    <div id="screen-resumen" class="screen active">
+      <div class="page-title">Resumen</div>
+      <div class="page-subtitle">Vista general de tu situación financiera</div>
+      <div id="alertas-wrap"></div>
+      <div class="metrics" id="metrics-resumen"></div>
+      <div class="two-col">
+        <div class="card"><div class="card-title">Vencimientos próximos</div><div id="proximos-list"></div></div>
+        <div class="card"><div class="card-title">Últimos gastos del día</div><div id="ultimos-gd"></div></div>
+      </div>
+      <div class="card"><div class="card-title">Ventas — últimos 7 días</div><div class="mini-chart" id="week-chart"></div></div>
+    </div>
+
+    <!-- VENTAS -->
+    <div id="screen-ventas" class="screen">
+      <div class="page-title">Ventas</div>
+      <div class="page-subtitle">Registrá el monto vendido cada día</div>
+      <div class="card">
+        <div class="card-title">Nueva venta</div>
+        <div class="form-grid">
+          <div><label class="form-label">Fecha</label><input type="date" id="v-fecha"></div>
+          <div><label class="form-label">Monto ($)</label><input type="number" id="v-monto" placeholder="95000"></div>
+        </div>
+        <div class="form-full"><label class="form-label">Nota</label><input type="text" id="v-nota" placeholder="Ej: buen sábado, faltó mercadería..."></div>
+        <button class="btn btn-primary" style="width:100%" onclick="agregarVenta()">+ Registrar venta</button>
+      </div>
+      <div class="metrics" id="metrics-ventas"></div>
+      <div class="card"><div class="card-title">Historial</div><div id="ventas-list"></div></div>
+    </div>
+
+    <!-- GASTOS DIARIOS -->
+    <div id="screen-gastos-diarios" class="screen">
+      <div class="page-title">Gastos del día</div>
+      <div class="page-subtitle">Supermercado, carnicería, verdulería y cualquier gasto cotidiano</div>
+      <div class="card">
+        <div class="card-title">Nuevo gasto</div>
+        <div class="form-grid-3">
+          <div><label class="form-label">Fecha</label><input type="date" id="gd-fecha"></div>
+          <div><label class="form-label">Monto ($)</label><input type="number" id="gd-monto" placeholder="3500"></div>
+          <div><label class="form-label">Categoría</label>
+            <select id="gd-cat">
+              <option value="super">🛒 Supermercado</option>
+              <option value="carne">🥩 Carnicería</option>
+              <option value="verdura">🥦 Verdulería</option>
+              <option value="limpieza">🧹 Limpieza/hogar</option>
+              <option value="comida">🍕 Comida/delivery</option>
+              <option value="personal">🧴 Personal/higiene</option>
+              <option value="otro">📦 Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-full"><label class="form-label">Descripción</label><input type="text" id="gd-desc" placeholder="Ej: compra semanal en Dia, carne para la semana..."></div>
+        <button class="btn btn-primary" style="width:100%" onclick="agregarGastoDiario()">+ Agregar gasto</button>
+      </div>
+      <div class="metrics" id="metrics-gd"></div>
+      <div class="card">
+        <div class="card-title">Historial</div>
+        <div class="tabs">
+          <button class="tab active" onclick="filtrarGD('todo',this)">Todos</button>
+          <button class="tab" onclick="filtrarGD('super',this)">Supermercado</button>
+          <button class="tab" onclick="filtrarGD('carne',this)">Carnicería</button>
+          <button class="tab" onclick="filtrarGD('verdura',this)">Verdulería</button>
+          <button class="tab" onclick="filtrarGD('otros',this)">Otros</button>
+        </div>
+        <div id="gd-list"></div>
+      </div>
+    </div>
+
+    <!-- BOLETAS -->
+    <div id="screen-boletas" class="screen">
+      <div class="page-title">Boletas de proveedores</div>
+      <div class="page-subtitle">Controlá vencimientos y pagos a Total, Lonco, Abineme y Goñi</div>
+      <div class="card">
+        <div class="card-title">Nueva boleta</div>
+        <div class="form-grid">
+          <div><label class="form-label">Proveedor</label>
+            <select id="b-prov"><option>Total</option><option>Lonco</option><option>Abineme</option><option>Goñi</option><option>Otro</option></select>
+          </div>
+          <div><label class="form-label">Monto ($)</label><input type="number" id="b-monto" placeholder="150000"></div>
+        </div>
+        <div class="form-grid">
+          <div><label class="form-label">Fecha de boleta</label><input type="date" id="b-fecha"></div>
+          <div><label class="form-label">Días para vencer</label>
+            <select id="b-dias">
+              <option value="0">Al recibir</option>
+              <option value="10" selected>10 días (Lonco / Abineme)</option>
+              <option value="30">30 días (Total)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="agregarBoleta()">+ Agregar boleta</button>
+      </div>
+      <div class="card"><div class="card-title">Pendientes de pago</div><div id="boletas-pend"></div></div>
+      <div class="card"><div class="card-title">Pagadas</div><div id="boletas-pag"></div></div>
+    </div>
+
+    <!-- GASTOS FIJOS -->
+    <div id="screen-fijos" class="screen">
+      <div class="page-title">Gastos fijos</div>
+      <div class="page-subtitle">Alquileres, servicios y otros pagos mensuales recurrentes</div>
+      <div class="card">
+        <div class="card-title">Nuevo gasto fijo</div>
+        <div class="form-grid">
+          <div><label class="form-label">Descripción</label><input type="text" id="gf-desc" placeholder="Ej: Alquiler negocio"></div>
+          <div><label class="form-label">Monto mensual ($)</label><input type="number" id="gf-monto" placeholder="120000"></div>
+        </div>
+        <div class="form-grid">
+          <div><label class="form-label">Categoría</label>
+            <select id="gf-cat"><option value="negocio">Negocio</option><option value="personal">Personal</option><option value="servicios">Servicios</option></select>
+          </div>
+          <div><label class="form-label">Día del mes</label><input type="number" id="gf-dia" placeholder="5" min="1" max="31"></div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="agregarFijo()">+ Agregar gasto fijo</button>
+      </div>
+      <div class="metrics" id="metrics-fijos"></div>
+      <div class="card"><div class="card-title">Gastos registrados</div><div id="fijos-list"></div></div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// SUPABASE
+// ═══════════════════════════════════════════
+const SUPABASE_URL = 'https://fekhvycxgormbrzzfbyg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZla2h2eWN4Z29ybWJyenpmYnlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTI5MjYsImV4cCI6MjA4OTYyODkyNn0.rqu6cVsJMMXEtmF9_VGVPugFotzumfBsM65ENagft2A';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ═══════════════════════════════════════════
+// STATE (in-memory cache)
+// ═══════════════════════════════════════════
+let state = {
+  saldo: 0, nextId: 20,
+  ventas: [], gastosDiarios: [], boletas: [], gastosFijos: [],
+};
+let online = false;
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+const TODAY = new Date().toISOString().split('T')[0];
+
+function fmt(n) {
+  if (n == null) return '—';
+  const abs = Math.round(Math.abs(n));
+  return (n < 0 ? '−' : '') + '$' + abs.toLocaleString('es-AR');
+}
+function fmtD(s) { if(!s) return ''; const [y,m,d]=s.split('-'); return d+'/'+m; }
+function diasHasta(s) {
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const f=new Date(s); f.setHours(0,0,0,0);
+  return Math.round((f-hoy)/86400000);
+}
+function saldoCls(n) { return n<0?'red':n<200000?'orange':'green'; }
+
+const catInfo = {
+  super:{label:'Supermercado',emoji:'🛒'},carne:{label:'Carnicería',emoji:'🥩'},
+  verdura:{label:'Verdulería',emoji:'🥦'},limpieza:{label:'Limpieza',emoji:'🧹'},
+  comida:{label:'Comida',emoji:'🍕'},personal:{label:'Personal',emoji:'🧴'},
+  otro:{label:'Otro',emoji:'📦'},
+};
+
+function toast(msg, type='success') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function setSyncStatus(status) {
+  const dot=document.getElementById('sync-dot');
+  const txt=document.getElementById('sync-text');
+  if(status==='ok'){dot.className='sync-dot';txt.textContent='sincronizado';online=true;}
+  else if(status==='loading'){dot.className='sync-dot loading';txt.textContent='sincronizando...';online=false;}
+  else{dot.className='sync-dot off';txt.textContent='sin conexión';online=false;}
+}
+
+// ═══════════════════════════════════════════
+// LOAD FROM SUPABASE
+// ═══════════════════════════════════════════
+async function loadAll() {
+  setSyncStatus('loading');
+  try {
+    const [
+      {data:est}, {data:ventas}, {data:gd},
+      {data:boletas}, {data:fijos}
+    ] = await Promise.all([
+      sb.from('estado').select('*').single(),
+      sb.from('ventas').select('*').order('fecha',{ascending:false}),
+      sb.from('gastos_diarios').select('*').order('fecha',{ascending:false}),
+      sb.from('boletas').select('*').order('vence'),
+      sb.from('gastos_fijos').select('*').order('id'),
+    ]);
+
+    state.saldo   = est?.saldo ?? 497281;
+    state.nextId  = est?.next_id ?? 20;
+    state.ventas  = (ventas||[]).map(v=>({id:v.id,fecha:v.fecha,monto:Number(v.monto),nota:v.nota||''}));
+    state.gastosDiarios = (gd||[]).map(g=>({id:g.id,fecha:g.fecha,monto:Number(g.monto),cat:g.cat,desc:g.descripcion||''}));
+    state.boletas = (boletas||[]).map(b=>({id:b.id,prov:b.prov,monto:Number(b.monto),fechaBoleta:b.fecha_boleta,vence:b.vence,pagada:b.pagada}));
+    state.gastosFijos = (fijos||[]).map(g=>({id:g.id,desc:g.descripcion||'',monto:Number(g.monto||0),cat:g.cat,dia:g.dia}));
+
+    setSyncStatus('ok');
+    document.getElementById('loading').style.display='none';
+    renderAll();
+  } catch(e) {
+    setSyncStatus('error');
+    document.getElementById('loading').style.display='none';
+    toast('Error al cargar datos','error');
+    renderAll();
+  }
+}
+
+// ═══════════════════════════════════════════
+// SAVE ESTADO (saldo + nextId)
+// ═══════════════════════════════════════════
+async function saveEstado() {
+  await sb.from('estado').upsert({id:'principal',saldo:state.saldo,next_id:state.nextId,updated_at:new Date().toISOString()});
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function goTo(name, el) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  el.classList.add('active');
+  renderAll();
+}
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+function renderAll() {
+  renderSidebar(); renderResumen(); renderVentas();
+  renderGD(gdFilter); renderBoletas(); renderFijos();
+}
+
+function renderSidebar() {
+  const sa=document.getElementById('sidebar-amount');
+  sa.textContent=fmt(state.saldo);
+  sa.className='amount '+(state.saldo<0?'neg':state.saldo<200000?'warn':'pos');
+  const total=state.boletas.find(b=>b.prov==='Total'&&!b.pagada);
+  const sp=document.getElementById('sidebar-progress');
+  if(total){
+    sp.style.display='block';
+    const pct=Math.min(100,Math.round(state.saldo/total.monto*100));
+    document.getElementById('prog-fill').style.width=pct+'%';
+    document.getElementById('prog-left').textContent=pct+'% juntado';
+    document.getElementById('prog-right').textContent='falta '+fmt(total.monto-state.saldo);
+  } else { sp.style.display='none'; }
+}
+
+function renderResumen() {
+  const alertas=state.boletas.filter(b=>!b.pagada&&diasHasta(b.vence)<=3);
+  document.getElementById('alertas-wrap').innerHTML=alertas.map(b=>{
+    const d=diasHasta(b.vence);
+    const txt=d<0?`Vencida hace ${Math.abs(d)} días`:d===0?'Vence hoy':`Vence en ${d} días`;
+    return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> — ${fmt(b.monto)}</span><span>${txt}</span></div>`;
+  }).join('');
+
+  const hoyV=state.ventas.filter(v=>v.fecha===TODAY).reduce((a,b)=>a+b.monto,0);
+  const semV=state.ventas.filter(v=>diasHasta(v.fecha)>=-6&&diasHasta(v.fecha)<=0).reduce((a,b)=>a+b.monto,0);
+  const bPend=state.boletas.filter(b=>!b.pagada).reduce((a,b)=>a+b.monto,0);
+  const prox7=state.boletas.filter(b=>!b.pagada&&diasHasta(b.vence)<=7&&diasHasta(b.vence)>=0).reduce((a,b)=>a+b.monto,0);
+  const gdSem=state.gastosDiarios.filter(g=>diasHasta(g.fecha)>=-6&&diasHasta(g.fecha)<=0).reduce((a,b)=>a+b.monto,0);
+
+  document.getElementById('metrics-resumen').innerHTML=`
+    <div class="metric-card"><div class="metric-label">SALDO</div><div class="metric-value ${saldoCls(state.saldo)}">${fmt(state.saldo)}</div></div>
+    <div class="metric-card"><div class="metric-label">VENTAS HOY</div><div class="metric-value green">${fmt(hoyV)}</div></div>
+    <div class="metric-card"><div class="metric-label">VENTAS SEMANA</div><div class="metric-value green">${fmt(semV)}</div></div>
+    <div class="metric-card"><div class="metric-label">BOLETAS PEND.</div><div class="metric-value red">${fmt(bPend)}</div></div>
+    <div class="metric-card"><div class="metric-label">VENCE 7 DÍAS</div><div class="metric-value orange">${fmt(prox7)}</div></div>
+    <div class="metric-card"><div class="metric-label">GASTOS SEMANA</div><div class="metric-value yellow">${fmt(gdSem)}</div></div>
+  `;
+
+  const prox=[...state.boletas].filter(b=>!b.pagada).sort((a,b)=>a.vence.localeCompare(b.vence)).slice(0,5);
+  document.getElementById('proximos-list').innerHTML=prox.length?prox.map(b=>{
+    const d=diasHasta(b.vence);
+    const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
+    const lbl=d<0?'Vencida':d===0?'Hoy':`${d}d`;
+    return `<div class="list-row">
+      <div class="main-info"><strong>${b.prov}</strong><span class="sub">vence ${fmtD(b.vence)}</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
+        <span class="badge ${cls}">${lbl}</span>
+        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pagué</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty">Sin boletas pendientes</div>';
+
+  const ultGD=[...state.gastosDiarios].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id).slice(0,5);
+  document.getElementById('ultimos-gd').innerHTML=ultGD.length?ultGD.map(g=>`
+    <div class="list-row">
+      <div class="main-info"><strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong><span class="sub">${fmtD(g.fecha)}</span></div>
+      <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
+    </div>`).join(''):'<div class="empty">Sin gastos registrados</div>';
+
+  const days=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);}
+  const montos=days.map(f=>state.ventas.filter(v=>v.fecha===f).reduce((a,b)=>a+b.monto,0));
+  const maxM=Math.max(...montos,1);
+  document.getElementById('week-chart').innerHTML=days.map((f,i)=>{
+    const h=Math.round(montos[i]/maxM*60);
+    const dn=new Date(f+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short'}).slice(0,1).toUpperCase();
+    return `<div class="chart-col">
+      <div class="chart-val">${montos[i]>0?'$'+Math.round(montos[i]/1000)+'k':''}</div>
+      <div class="chart-bar" style="height:${h}px;opacity:${f===TODAY?1:0.5}"></div>
+      <div class="chart-day">${dn}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderVentas() {
+  if(!document.getElementById('v-fecha').value) document.getElementById('v-fecha').value=TODAY;
+  const total=state.ventas.reduce((a,b)=>a+b.monto,0);
+  const avg=state.ventas.length?Math.round(total/state.ventas.length):0;
+  const mes=state.ventas.filter(v=>v.fecha&&v.fecha.startsWith(TODAY.slice(0,7))).reduce((a,b)=>a+b.monto,0);
+  document.getElementById('metrics-ventas').innerHTML=`
+    <div class="metric-card"><div class="metric-label">TOTAL</div><div class="metric-value green">${fmt(total)}</div></div>
+    <div class="metric-card"><div class="metric-label">PROMEDIO DIARIO</div><div class="metric-value">${fmt(avg)}</div></div>
+    <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value green">${fmt(mes)}</div></div>
+  `;
+  const sorted=[...state.ventas].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  document.getElementById('ventas-list').innerHTML=sorted.length?sorted.map(v=>`
+    <div class="list-row">
+      <div class="main-info"><strong>${fmtD(v.fecha)}</strong><span class="sub">${v.nota||'—'}</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="amount-col green">${fmt(v.monto)}</span>
+        <button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">✕</button>
+      </div>
+    </div>`).join(''):'<div class="empty">// sin ventas registradas</div>';
+}
+
+let gdFilter='todo';
+function filtrarGD(f,el) {
+  gdFilter=f;
+  document.querySelectorAll('#screen-gastos-diarios .tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderGD(f);
+}
+
+function renderGD(filtro) {
+  if(!document.getElementById('gd-fecha').value) document.getElementById('gd-fecha').value=TODAY;
+  const todos=state.gastosDiarios;
+  const sem=todos.filter(g=>diasHasta(g.fecha)>=-6&&diasHasta(g.fecha)<=0);
+  const mes=todos.filter(g=>g.fecha&&g.fecha.startsWith(TODAY.slice(0,7)));
+  const hoy=todos.filter(g=>g.fecha===TODAY);
+  document.getElementById('metrics-gd').innerHTML=`
+    <div class="metric-card"><div class="metric-label">HOY</div><div class="metric-value red">${fmt(hoy.reduce((a,b)=>a+b.monto,0))}</div></div>
+    <div class="metric-card"><div class="metric-label">ESTA SEMANA</div><div class="metric-value orange">${fmt(sem.reduce((a,b)=>a+b.monto,0))}</div></div>
+    <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value yellow">${fmt(mes.reduce((a,b)=>a+b.monto,0))}</div></div>
+  `;
+  let lista=filtro==='todo'?todos:filtro==='otros'
+    ?todos.filter(g=>!['super','carne','verdura'].includes(g.cat))
+    :todos.filter(g=>g.cat===filtro);
+  lista=[...lista].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id);
+  document.getElementById('gd-list').innerHTML=lista.length?lista.map(g=>`
+    <div class="list-row">
+      <div class="main-info">
+        <strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
+        <span class="sub">${fmtD(g.fecha)} · ${catInfo[g.cat]?.label||'Otro'}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
+        <button class="btn-danger-sm" onclick="eliminarGD(${g.id})">✕</button>
+      </div>
+    </div>`).join(''):'<div class="empty">// sin gastos en esta categoría</div>';
+}
+
+function renderBoletas() {
+  if(!document.getElementById('b-fecha').value) document.getElementById('b-fecha').value=TODAY;
+  const pend=[...state.boletas].filter(b=>!b.pagada).sort((a,b)=>a.vence.localeCompare(b.vence));
+  const pag=[...state.boletas].filter(b=>b.pagada).sort((a,b)=>b.vence.localeCompare(a.vence));
+  document.getElementById('boletas-pend').innerHTML=pend.length?pend.map(b=>{
+    const d=diasHasta(b.vence);
+    const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
+    const lbl=d<0?`Vencida ${Math.abs(d)}d`:d===0?'Hoy':`${d}d`;
+    return `<div class="list-row">
+      <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)} · vence ${fmtD(b.vence)}</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
+        <span class="badge ${cls}">${lbl}</span>
+        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pagué</button>
+        <button class="btn-danger-sm" onclick="eliminarBoleta(${b.id})">✕</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty">// sin boletas pendientes</div>';
+  document.getElementById('boletas-pag').innerHTML=pag.length?pag.map(b=>`
+    <div class="list-row paid">
+      <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)}</span></div>
+      <span class="amount-col">${fmt(b.monto)}</span>
+    </div>`).join(''):'<div class="empty">// ninguna todavía</div>';
+}
+
+function renderFijos() {
+  const total=state.gastosFijos.reduce((a,b)=>a+(b.monto||0),0);
+  const neg=state.gastosFijos.filter(g=>g.cat==='negocio').reduce((a,b)=>a+(b.monto||0),0);
+  const per=state.gastosFijos.filter(g=>g.cat!=='negocio').reduce((a,b)=>a+(b.monto||0),0);
+  document.getElementById('metrics-fijos').innerHTML=`
+    <div class="metric-card"><div class="metric-label">TOTAL MENSUAL</div><div class="metric-value orange">${fmt(total)}</div></div>
+    <div class="metric-card"><div class="metric-label">NEGOCIO</div><div class="metric-value">${fmt(neg)}</div></div>
+    <div class="metric-card"><div class="metric-label">PERSONAL</div><div class="metric-value">${fmt(per)}</div></div>
+  `;
+  const catM={negocio:'Negocio',personal:'Personal',servicios:'Servicios'};
+  document.getElementById('fijos-list').innerHTML=state.gastosFijos.length?state.gastosFijos.map(g=>`
+    <div class="list-row">
+      <div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' · día '+g.dia:''}</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="amount-col orange">${g.monto?fmt(g.monto):'—'}</span>
+        <button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">✕</button>
+      </div>
+    </div>`).join(''):'<div class="empty">// sin gastos fijos</div>';
+}
+
+// ═══════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════
+
+async function agregarVenta() {
+  const fecha=document.getElementById('v-fecha').value;
+  const monto=parseFloat(document.getElementById('v-monto').value);
+  const nota=document.getElementById('v-nota').value.trim();
+  if(!fecha||isNaN(monto)||monto<=0){toast('Completá fecha y monto','error');return;}
+  const id=state.nextId++;
+  state.saldo+=monto;
+  state.ventas.unshift({id,fecha,monto,nota});
+  document.getElementById('v-monto').value='';
+  document.getElementById('v-nota').value='';
+  renderAll();
+  setSyncStatus('loading');
+  try {
+    await Promise.all([
+      sb.from('ventas').insert({id,fecha,monto,nota}),
+      saveEstado(),
+    ]);
+    setSyncStatus('ok'); toast('Venta registrada '+fmt(monto));
+  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+}
+
+async function eliminarVenta(id) {
+  const v=state.ventas.find(x=>x.id===id);
+  if(!v||!confirm('¿Eliminar esta venta?'))return;
+  state.saldo-=v.monto;
+  state.ventas=state.ventas.filter(x=>x.id!==id);
+  renderAll(); setSyncStatus('loading');
+  try {
+    await Promise.all([sb.from('ventas').delete().eq('id',id), saveEstado()]);
+    setSyncStatus('ok'); toast('Venta eliminada','error');
+  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+}
+
+async function agregarGastoDiario() {
+  const fecha=document.getElementById('gd-fecha').value;
+  const monto=parseFloat(document.getElementById('gd-monto').value);
+  const cat=document.getElementById('gd-cat').value;
+  const desc=document.getElementById('gd-desc').value.trim();
+  if(!fecha||isNaN(monto)||monto<=0){toast('Completá fecha y monto','error');return;}
+  const id=state.nextId++;
+  state.saldo-=monto;
+  state.gastosDiarios.unshift({id,fecha,monto,cat,desc});
+  document.getElementById('gd-monto').value='';
+  document.getElementById('gd-desc').value='';
+  renderAll(); setSyncStatus('loading');
+  try {
+    await Promise.all([
+      sb.from('gastos_diarios').insert({id,fecha,monto,cat,descripcion:desc}),
+      saveEstado(),
+    ]);
+    setSyncStatus('ok'); toast('Gasto registrado '+fmt(monto));
+  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+}
+
+async function eliminarGD(id) {
+  const g=state.gastosDiarios.find(x=>x.id===id);
+  if(!g||!confirm('¿Eliminar este gasto?'))return;
+  state.saldo+=g.monto;
+  state.gastosDiarios=state.gastosDiarios.filter(x=>x.id!==id);
+  renderAll(); setSyncStatus('loading');
+  try {
+    await Promise.all([sb.from('gastos_diarios').delete().eq('id',id), saveEstado()]);
+    setSyncStatus('ok'); toast('Gasto eliminado','error');
+  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+}
+
+async function agregarBoleta() {
+  const prov=document.getElementById('b-prov').value;
+  const monto=parseFloat(document.getElementById('b-monto').value);
+  const fechaBoleta=document.getElementById('b-fecha').value;
+  const dias=parseInt(document.getElementById('b-dias').value);
+  if(!prov||isNaN(monto)||monto<=0||!fechaBoleta){toast('Completá todos los campos','error');return;}
+  const v=new Date(fechaBoleta); v.setDate(v.getDate()+dias);
+  const vence=v.toISOString().split('T')[0];
+  const id=state.nextId++;
+  state.boletas.push({id,prov,monto,fechaBoleta,vence,pagada:false});
+  state.boletas.sort((a,b)=>a.vence.localeCompare(b.vence));
+  document.getElementById('b-monto').value='';
+  renderAll(); setSyncStatus('loading');
+  try {
+    await Promise.all([
+      sb.from('boletas').insert({id,prov,monto,fecha_boleta:fechaBoleta,vence,pagada:false}),
+      saveEstado(),
+    ]);
+    setSyncStatus('ok'); toast('Boleta de '+prov+' agregada');
+  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+}
+
+async function pagarBoleta(id) {
+  const b=state.boletas.find(x=>x.id===id);
+  if(!b||!confirm(`¿Confirmar pago de ${fmt(b.monto)} a ${b.prov}?`))return;
+  b.pagada=true; state.saldo-=b.monto;
+  renderAll(); setSyncStatus('loading');
+  try {
+    await Promise.all([
+      sb.from('boletas').update({pagada:true}).eq('id',id),
+      saveEstado(),
+    ]);
+    setSyncStatus('ok'); toast('Pago registrado a '+b.prov);
+  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+}
+
+async function eliminarBoleta(id) {
+  if(!confirm('¿Eliminar esta boleta?'))return;
+  state.boletas=state.boletas.filter(x=>x.id!==id);
+  renderAll(); setSyncStatus('loading');
+  try {
+    await sb.from('boletas').delete().eq('id',id);
+    setSyncStatus('ok'); toast('Boleta eliminada','error');
+  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+}
+
+async function agregarFijo() {
+  const desc=document.getElementById('gf-desc').value.trim();
+  const monto=parseFloat(document.getElementById('gf-monto').value);
+  const cat=document.getElementById('gf-cat').value;
+  const dia=parseInt(document.getElementById('gf-dia').value)||null;
+  if(!desc){toast('Ingresá una descripción','error');return;}
+  const id=state.nextId++;
+  state.gastosFijos.push({id,desc,monto:isNaN(monto)?0:monto,cat,dia});
+  document.getElementById('gf-desc').value='';
+  document.getElementById('gf-monto').value='';
+  document.getElementById('gf-dia').value='';
+  renderAll(); setSyncStatus('loading');
+  try {
+    await Promise.all([
+      sb.from('gastos_fijos').insert({id,descripcion:desc,monto:isNaN(monto)?0:monto,cat,dia}),
+      saveEstado(),
+    ]);
+    setSyncStatus('ok'); toast('Gasto fijo agregado');
+  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+}
+
+async function eliminarFijo(id) {
+  if(!confirm('¿Eliminar este gasto fijo?'))return;
+  state.gastosFijos=state.gastosFijos.filter(x=>x.id!==id);
+  renderAll(); setSyncStatus('loading');
+  try {
+    await sb.from('gastos_fijos').delete().eq('id',id);
+    setSyncStatus('ok'); toast('Gasto eliminado','error');
+  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+loadAll();
+</script>
+</body>
+</html>
