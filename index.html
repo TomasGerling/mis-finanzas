@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mis Finanzas</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -142,7 +143,7 @@
 <div class="modal-overlay" id="modal-saldo">
   <div class="modal">
     <div class="modal-title">Editar saldo</div>
-    <div class="modal-sub" id="modal-saldo-sub">ModificÃ¡ el monto disponible</div>
+    <div class="modal-sub" id="modal-saldo-sub">Modificá el monto disponible</div>
     <div class="form-full">
       <label class="form-label">Nuevo monto ($)</label>
       <input type="number" id="modal-saldo-input" placeholder="120000">
@@ -157,20 +158,20 @@
 <!-- MODAL FORMA DE COBRO (ventas) -->
 <div class="modal-overlay" id="modal-cobro">
   <div class="modal">
-    <div class="modal-title">Â¿CÃ³mo cobraste?</div>
-    <div class="modal-sub">ElegÃ­ dÃ³nde va a entrar el dinero de esta venta</div>
+    <div class="modal-title">¿Cómo cobraste?</div>
+    <div class="modal-sub">Elegí dónde va a entrar el dinero de esta venta</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;">
       <button class="btn" id="cobro-efectivo" onclick="confirmarVenta('efectivo')" style="justify-content:flex-start;display:flex;align-items:center;gap:10px;padding:12px 16px;">
-        <span style="font-size:20px">ðŸ’µ</span>
+        <span style="font-size:20px">💵</span>
         <div style="text-align:left"><div style="font-weight:600;color:var(--text)">Efectivo</div><div style="font-size:12px;color:var(--text3)">Billetes en mano</div></div>
       </button>
       <button class="btn" id="cobro-banco" onclick="confirmarVenta('banco')" style="justify-content:flex-start;display:flex;align-items:center;gap:10px;padding:12px 16px;">
-        <span style="font-size:20px">ðŸ¦</span>
+        <span style="font-size:20px">🏦</span>
         <div style="text-align:left"><div style="font-weight:600;color:var(--text)">Banco / MP</div><div style="font-size:12px;color:var(--text3)">Transferencia o Mercado Pago</div></div>
       </button>
       <button class="btn" id="cobro-liquidar" onclick="confirmarVenta('a_liquidar')" style="justify-content:flex-start;display:flex;align-items:center;gap:10px;padding:12px 16px;">
-        <span style="font-size:20px">ðŸ’³</span>
-        <div style="text-align:left"><div style="font-weight:600;color:var(--text)">A liquidar</div><div style="font-size:12px;color:var(--text3)">Tarjeta de crÃ©dito, acredita despuÃ©s</div></div>
+        <span style="font-size:20px">💳</span>
+        <div style="text-align:left"><div style="font-weight:600;color:var(--text)">A liquidar</div><div style="font-size:12px;color:var(--text3)">Tarjeta de crédito, acredita después</div></div>
       </button>
     </div>
     <div class="modal-actions">
@@ -181,25 +182,25 @@
 
 <div class="app-shell">
   <aside class="sidebar">
-    <div class="sidebar-logo">MIS FINANZAS<span>negocio Â· personal</span></div>
+    <div class="sidebar-logo">MIS FINANZAS<span>negocio · personal</span></div>
     <div class="sync-bar"><div class="sync-dot loading" id="sync-dot"></div><span id="sync-text">conectando...</span></div>
     <div class="sidebar-section">Principal</div>
-    <div class="nav-item active" onclick="goTo('resumen',this)"><span class="nav-icon">â—ˆ</span> Resumen</div>
-    <div class="nav-item" onclick="goTo('ventas',this)"><span class="nav-icon">â†‘</span> Ventas</div>
+    <div class="nav-item active" onclick="goTo('resumen',this)"><span class="nav-icon">◈</span> Resumen</div>
+    <div class="nav-item" onclick="goTo('ventas',this)"><span class="nav-icon">↑</span> Ventas</div>
     <div class="sidebar-section">Egresos</div>
-    <div class="nav-item" onclick="goTo('gastos-diarios',this)"><span class="nav-icon">ðŸ›’</span> Gastos del dÃ­a</div>
-    <div class="nav-item" onclick="goTo('boletas',this)"><span class="nav-icon">â—»</span> Boletas</div>
-    <div class="nav-item" onclick="goTo('fijos',this)"><span class="nav-icon">âŸ³</span> Gastos fijos</div>
+    <div class="nav-item" onclick="goTo('gastos-diarios',this)"><span class="nav-icon">🛒</span> Gastos del día</div>
+    <div class="nav-item" onclick="goTo('boletas',this)"><span class="nav-icon">◻</span> Boletas</div>
+    <div class="nav-item" onclick="goTo('fijos',this)"><span class="nav-icon">⟳</span> Gastos fijos</div>
     <div class="saldo-widget">
       <div class="label">SALDO TOTAL</div>
-      <div class="amount pos" id="sidebar-amount">â€”</div>
+      <div class="amount pos" id="sidebar-amount">—</div>
       <div class="saldo-mini-grid">
-        <div class="saldo-mini"><div class="ml">ðŸ’µ Efectivo</div><div class="mv green" id="sb-efectivo">â€”</div></div>
-        <div class="saldo-mini"><div class="ml">ðŸ¦ Banco</div><div class="mv blue" id="sb-banco">â€”</div></div>
-        <div class="saldo-mini" style="grid-column:span 2"><div class="ml">ðŸ’³ A liquidar</div><div class="mv purple" id="sb-liquidar">â€”</div></div>
+        <div class="saldo-mini"><div class="ml">💵 Efectivo</div><div class="mv green" id="sb-efectivo">—</div></div>
+        <div class="saldo-mini"><div class="ml">🏦 Banco</div><div class="mv blue" id="sb-banco">—</div></div>
+        <div class="saldo-mini" style="grid-column:span 2"><div class="ml">💳 A liquidar</div><div class="mv purple" id="sb-liquidar">—</div></div>
       </div>
       <div class="progress-wrap" id="sidebar-progress" style="display:none">
-        <div class="progress-label"><span id="prog-left">â€”</span><span id="prog-right">â€”</span></div>
+        <div class="progress-label"><span id="prog-left">—</span><span id="prog-right">—</span></div>
         <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
       </div>
     </div>
@@ -210,7 +211,7 @@
     <!-- RESUMEN -->
     <div id="screen-resumen" class="screen active">
       <div class="page-title">Resumen</div>
-      <div class="page-subtitle">Vista general de tu situaciÃ³n financiera</div>
+      <div class="page-subtitle">Vista general de tu situación financiera</div>
       <div id="alertas-wrap"></div>
 
       <!-- Saldo breakdown -->
@@ -218,23 +219,23 @@
 
       <div class="metrics" id="metrics-resumen"></div>
       <div class="two-col">
-        <div class="card"><div class="card-title">Vencimientos prÃ³ximos</div><div id="proximos-list"></div></div>
-        <div class="card"><div class="card-title">Ãšltimos gastos del dÃ­a</div><div id="ultimos-gd"></div></div>
+        <div class="card"><div class="card-title">Vencimientos próximos</div><div id="proximos-list"></div></div>
+        <div class="card"><div class="card-title">Últimos gastos del día</div><div id="ultimos-gd"></div></div>
       </div>
-      <div class="card"><div class="card-title">Ventas â€” Ãºltimos 7 dÃ­as</div><div class="mini-chart" id="week-chart"></div></div>
+      <div class="card"><div class="card-title">Ventas — últimos 7 días</div><div class="mini-chart" id="week-chart"></div></div>
     </div>
 
     <!-- VENTAS -->
     <div id="screen-ventas" class="screen">
       <div class="page-title">Ventas</div>
-      <div class="page-subtitle">RegistrÃ¡ el monto vendido cada dÃ­a</div>
+      <div class="page-subtitle">Registrá el monto vendido cada día</div>
       <div class="card">
         <div class="card-title">Nueva venta</div>
         <div class="form-grid">
           <div><label class="form-label">Fecha</label><input type="date" id="v-fecha"></div>
           <div><label class="form-label">Monto ($)</label><input type="number" id="v-monto" placeholder="95000"></div>
         </div>
-        <div class="form-full"><label class="form-label">Nota</label><input type="text" id="v-nota" placeholder="Ej: buen sÃ¡bado, faltÃ³ mercaderÃ­a..."></div>
+        <div class="form-full"><label class="form-label">Nota</label><input type="text" id="v-nota" placeholder="Ej: buen sábado, faltó mercadería..."></div>
         <button class="btn btn-primary" style="width:100%" onclick="iniciarVenta()">+ Registrar venta</button>
       </div>
       <div class="metrics" id="metrics-ventas"></div>
@@ -243,26 +244,26 @@
 
     <!-- GASTOS DIARIOS -->
     <div id="screen-gastos-diarios" class="screen">
-      <div class="page-title">Gastos del dÃ­a</div>
-      <div class="page-subtitle">Supermercado, carnicerÃ­a, verdulerÃ­a y cualquier gasto cotidiano</div>
+      <div class="page-title">Gastos del día</div>
+      <div class="page-subtitle">Supermercado, carnicería, verdulería y cualquier gasto cotidiano</div>
       <div class="card">
         <div class="card-title">Nuevo gasto</div>
         <div class="form-grid-3">
           <div><label class="form-label">Fecha</label><input type="date" id="gd-fecha"></div>
           <div><label class="form-label">Monto ($)</label><input type="number" id="gd-monto" placeholder="3500"></div>
-          <div><label class="form-label">CategorÃ­a</label>
+          <div><label class="form-label">Categoría</label>
             <select id="gd-cat">
-              <option value="super">ðŸ›’ Supermercado</option>
-              <option value="carne">ðŸ¥© CarnicerÃ­a</option>
-              <option value="verdura">ðŸ¥¦ VerdulerÃ­a</option>
-              <option value="limpieza">ðŸ§¹ Limpieza/hogar</option>
-              <option value="comida">ðŸ• Comida/delivery</option>
-              <option value="personal">ðŸ§´ Personal/higiene</option>
-              <option value="otro">ðŸ“¦ Otro</option>
+              <option value="super">🛒 Supermercado</option>
+              <option value="carne">🥩 Carnicería</option>
+              <option value="verdura">🥦 Verdulería</option>
+              <option value="limpieza">🧹 Limpieza/hogar</option>
+              <option value="comida">🍕 Comida/delivery</option>
+              <option value="personal">🧴 Personal/higiene</option>
+              <option value="otro">📦 Otro</option>
             </select>
           </div>
         </div>
-        <div class="form-full"><label class="form-label">DescripciÃ³n</label><input type="text" id="gd-desc" placeholder="Ej: compra semanal en Dia, carne para la semana..."></div>
+        <div class="form-full"><label class="form-label">Descripción</label><input type="text" id="gd-desc" placeholder="Ej: compra semanal en Dia, carne para la semana..."></div>
         <button class="btn btn-primary" style="width:100%" onclick="agregarGastoDiario()">+ Agregar gasto</button>
       </div>
       <div class="metrics" id="metrics-gd"></div>
@@ -271,8 +272,8 @@
         <div class="tabs">
           <button class="tab active" onclick="filtrarGD('todo',this)">Todos</button>
           <button class="tab" onclick="filtrarGD('super',this)">Supermercado</button>
-          <button class="tab" onclick="filtrarGD('carne',this)">CarnicerÃ­a</button>
-          <button class="tab" onclick="filtrarGD('verdura',this)">VerdulerÃ­a</button>
+          <button class="tab" onclick="filtrarGD('carne',this)">Carnicería</button>
+          <button class="tab" onclick="filtrarGD('verdura',this)">Verdulería</button>
           <button class="tab" onclick="filtrarGD('otros',this)">Otros</button>
         </div>
         <div id="gd-list"></div>
@@ -282,22 +283,22 @@
     <!-- BOLETAS -->
     <div id="screen-boletas" class="screen">
       <div class="page-title">Boletas de proveedores</div>
-      <div class="page-subtitle">ControlÃ¡ vencimientos y pagos a Total, Lonco, Abineme y GoÃ±i</div>
+      <div class="page-subtitle">Controlá vencimientos y pagos a Total, Lonco, Abineme y Goñi</div>
       <div class="card">
         <div class="card-title">Nueva boleta</div>
         <div class="form-grid">
           <div><label class="form-label">Proveedor</label>
-            <select id="b-prov"><option>Total</option><option>Lonco</option><option>Abineme</option><option>GoÃ±i</option><option>Otro</option></select>
+            <select id="b-prov"><option>Total</option><option>Lonco</option><option>Abineme</option><option>Goñi</option><option>Otro</option></select>
           </div>
           <div><label class="form-label">Monto ($)</label><input type="number" id="b-monto" placeholder="150000"></div>
         </div>
         <div class="form-grid">
           <div><label class="form-label">Fecha de boleta</label><input type="date" id="b-fecha"></div>
-          <div><label class="form-label">DÃ­as para vencer</label>
+          <div><label class="form-label">Días para vencer</label>
             <select id="b-dias">
               <option value="0">Al recibir</option>
-              <option value="10" selected>10 dÃ­as (Lonco / Abineme)</option>
-              <option value="30">30 dÃ­as (Total)</option>
+              <option value="10" selected>10 días (Lonco / Abineme)</option>
+              <option value="30">30 días (Total)</option>
             </select>
           </div>
         </div>
@@ -314,14 +315,14 @@
       <div class="card">
         <div class="card-title">Nuevo gasto fijo</div>
         <div class="form-grid">
-          <div><label class="form-label">DescripciÃ³n</label><input type="text" id="gf-desc" placeholder="Ej: Alquiler negocio"></div>
+          <div><label class="form-label">Descripción</label><input type="text" id="gf-desc" placeholder="Ej: Alquiler negocio"></div>
           <div><label class="form-label">Monto mensual ($)</label><input type="number" id="gf-monto" placeholder="120000"></div>
         </div>
         <div class="form-grid">
-          <div><label class="form-label">CategorÃ­a</label>
+          <div><label class="form-label">Categoría</label>
             <select id="gf-cat"><option value="negocio">Negocio</option><option value="personal">Personal</option><option value="servicios">Servicios</option></select>
           </div>
-          <div><label class="form-label">DÃ­a del mes</label><input type="number" id="gf-dia" placeholder="5" min="1" max="31"></div>
+          <div><label class="form-label">Día del mes</label><input type="number" id="gf-dia" placeholder="5" min="1" max="31"></div>
         </div>
         <button class="btn btn-primary" style="width:100%" onclick="agregarFijo()">+ Agregar gasto fijo</button>
       </div>
@@ -356,9 +357,9 @@ const TODAY = new Date().toISOString().split('T')[0];
 function saldoTotal() { return state.efectivo + state.banco + state.a_liquidar; }
 
 function fmt(n) {
-  if (n == null) return 'â€”';
+  if (n == null) return '—';
   const abs = Math.round(Math.abs(n));
-  return (n < 0 ? 'âˆ’' : '') + '$' + abs.toLocaleString('es-AR');
+  return (n < 0 ? '−' : '') + '$' + abs.toLocaleString('es-AR');
 }
 function fmtD(s) { if(!s) return ''; const [y,m,d]=s.split('-'); return d+'/'+m; }
 function diasHasta(s) {
@@ -369,10 +370,10 @@ function diasHasta(s) {
 function saldoCls(n) { return n<0?'red':n<200000?'orange':'green'; }
 
 const catInfo = {
-  super:{label:'Supermercado',emoji:'ðŸ›’'},carne:{label:'CarnicerÃ­a',emoji:'ðŸ¥©'},
-  verdura:{label:'VerdulerÃ­a',emoji:'ðŸ¥¦'},limpieza:{label:'Limpieza',emoji:'ðŸ§¹'},
-  comida:{label:'Comida',emoji:'ðŸ•'},personal:{label:'Personal',emoji:'ðŸ§´'},
-  otro:{label:'Otro',emoji:'ðŸ“¦'},
+  super:{label:'Supermercado',emoji:'🛒'},carne:{label:'Carnicería',emoji:'🥩'},
+  verdura:{label:'Verdulería',emoji:'🥦'},limpieza:{label:'Limpieza',emoji:'🧹'},
+  comida:{label:'Comida',emoji:'🍕'},personal:{label:'Personal',emoji:'🧴'},
+  otro:{label:'Otro',emoji:'📦'},
 };
 
 function toast(msg, type='success') {
@@ -386,13 +387,13 @@ function setSyncStatus(status) {
   const txt=document.getElementById('sync-text');
   if(status==='ok'){dot.className='sync-dot';txt.textContent='sincronizado';}
   else if(status==='loading'){dot.className='sync-dot loading';txt.textContent='guardando...';}
-  else{dot.className='sync-dot off';txt.textContent='sin conexiÃ³n';}
+  else{dot.className='sync-dot off';txt.textContent='sin conexión';}
 }
 
-// â•â•â• MODAL SALDO â•â•â•
+// ═══ MODAL SALDO ═══
 function abrirModalSaldo(key) {
   editSaldoKey = key;
-  const labels = {efectivo:'Efectivo ðŸ’µ', banco:'Banco / MP ðŸ¦', a_liquidar:'A liquidar ðŸ’³'};
+  const labels = {efectivo:'Efectivo 💵', banco:'Banco / MP 🏦', a_liquidar:'A liquidar 💳'};
   document.getElementById('modal-saldo-sub').textContent = 'Editando: ' + labels[key];
   document.getElementById('modal-saldo-input').value = Math.round(state[key]);
   document.getElementById('modal-saldo').classList.add('open');
@@ -406,7 +407,7 @@ function cerrarModalSaldo() {
 
 async function confirmarEditSaldo() {
   const val = parseFloat(document.getElementById('modal-saldo-input').value);
-  if (isNaN(val) || val < 0) { toast('IngresÃ¡ un monto vÃ¡lido','error'); return; }
+  if (isNaN(val) || val < 0) { toast('Ingresá un monto válido','error'); return; }
   state[editSaldoKey] = val;
   cerrarModalSaldo();
   renderAll();
@@ -427,7 +428,7 @@ document.getElementById('modal-saldo-input').addEventListener('keydown', functio
   if(e.key==='Enter') confirmarEditSaldo();
 });
 
-// â•â•â• MODAL COBRO â•â•â•
+// ═══ MODAL COBRO ═══
 function cerrarModalCobro() {
   document.getElementById('modal-cobro').classList.remove('open');
   ventaPendiente = null;
@@ -437,7 +438,7 @@ document.getElementById('modal-cobro').addEventListener('click', function(e){
   if(e.target===this) cerrarModalCobro();
 });
 
-// â•â•â• LOAD â•â•â•
+// ═══ LOAD ═══
 async function loadAll() {
   setSyncStatus('loading');
   try {
@@ -479,7 +480,7 @@ async function saveEstado() {
   });
 }
 
-// â•â•â• NAV â•â•â•
+// ═══ NAV ═══
 function goTo(name, el) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -488,7 +489,7 @@ function goTo(name, el) {
   renderAll();
 }
 
-// â•â•â• RENDER â•â•â•
+// ═══ RENDER ═══
 function renderAll() {
   renderSidebar(); renderResumen(); renderVentas();
   renderGD(gdFilter); renderBoletas(); renderFijos();
@@ -520,24 +521,24 @@ function renderResumen() {
   const alertas=state.boletas.filter(b=>!b.pagada&&diasHasta(b.vence)<=3);
   document.getElementById('alertas-wrap').innerHTML=alertas.map(b=>{
     const d=diasHasta(b.vence);
-    const txt=d<0?`Vencida hace ${Math.abs(d)} dÃ­as`:d===0?'Vence hoy':`Vence en ${d} dÃ­as`;
-    return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> â€” ${fmt(b.monto)}</span><span>${txt}</span></div>`;
+    const txt=d<0?`Vencida hace ${Math.abs(d)} días`:d===0?'Vence hoy':`Vence en ${d} días`;
+    return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> — ${fmt(b.monto)}</span><span>${txt}</span></div>`;
   }).join('');
 
   // Saldo breakdown cards
   document.getElementById('saldo-breakdown').innerHTML = `
     <div class="saldo-pocket">
-      <div class="pocket-label"><span class="pocket-icon">ðŸ’µ</span> EFECTIVO</div>
+      <div class="pocket-label"><span class="pocket-icon">💵</span> EFECTIVO</div>
       <div class="pocket-value green">${fmt(state.efectivo)}</div>
       <button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('efectivo')">Editar</button>
     </div>
     <div class="saldo-pocket">
-      <div class="pocket-label"><span class="pocket-icon">ðŸ¦</span> BANCO / MP</div>
+      <div class="pocket-label"><span class="pocket-icon">🏦</span> BANCO / MP</div>
       <div class="pocket-value blue">${fmt(state.banco)}</div>
       <button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('banco')">Editar</button>
     </div>
     <div class="saldo-pocket">
-      <div class="pocket-label"><span class="pocket-icon">ðŸ’³</span> A LIQUIDAR</div>
+      <div class="pocket-label"><span class="pocket-icon">💳</span> A LIQUIDAR</div>
       <div class="pocket-value purple">${fmt(state.a_liquidar)}</div>
       <button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('a_liquidar')">Editar</button>
     </div>
@@ -554,7 +555,7 @@ function renderResumen() {
     <div class="metric-card"><div class="metric-label">VENTAS HOY</div><div class="metric-value green">${fmt(hoyV)}</div></div>
     <div class="metric-card"><div class="metric-label">VENTAS SEMANA</div><div class="metric-value green">${fmt(semV)}</div></div>
     <div class="metric-card"><div class="metric-label">BOLETAS PEND.</div><div class="metric-value red">${fmt(bPend)}</div></div>
-    <div class="metric-card"><div class="metric-label">VENCE 7 DÃAS</div><div class="metric-value orange">${fmt(prox7)}</div></div>
+    <div class="metric-card"><div class="metric-label">VENCE 7 DÍAS</div><div class="metric-value orange">${fmt(prox7)}</div></div>
     <div class="metric-card"><div class="metric-label">GASTOS SEMANA</div><div class="metric-value yellow">${fmt(gdSem)}</div></div>
   `;
 
@@ -568,7 +569,7 @@ function renderResumen() {
       <div style="display:flex;align-items:center;gap:8px">
         <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
         <span class="badge ${cls}">${lbl}</span>
-        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">PaguÃ©</button>
+        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pagué</button>
       </div>
     </div>`;
   }).join(''):'<div class="empty">Sin boletas pendientes</div>';
@@ -576,7 +577,7 @@ function renderResumen() {
   const ultGD=[...state.gastosDiarios].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id).slice(0,5);
   document.getElementById('ultimos-gd').innerHTML=ultGD.length?ultGD.map(g=>`
     <div class="list-row">
-      <div class="main-info"><strong>${catInfo[g.cat]?.emoji||'ðŸ“¦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong><span class="sub">${fmtD(g.fecha)}</span></div>
+      <div class="main-info"><strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong><span class="sub">${fmtD(g.fecha)}</span></div>
       <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
     </div>`).join(''):'<div class="empty">Sin gastos registrados</div>';
 
@@ -605,17 +606,17 @@ function renderVentas() {
     <div class="metric-card"><div class="metric-label">PROMEDIO DIARIO</div><div class="metric-value">${fmt(avg)}</div></div>
     <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value green">${fmt(mes)}</div></div>
   `;
-  const cobroIcon = {efectivo:'ðŸ’µ',banco:'ðŸ¦',a_liquidar:'ðŸ’³'};
+  const cobroIcon = {efectivo:'💵',banco:'🏦',a_liquidar:'💳'};
   const sorted=[...state.ventas].sort((a,b)=>b.fecha.localeCompare(a.fecha));
   document.getElementById('ventas-list').innerHTML=sorted.length?sorted.map(v=>`
     <div class="list-row">
       <div class="main-info">
-        <strong>${fmtD(v.fecha)} <span style="font-size:12px">${cobroIcon[v.cobro]||'ðŸ¦'}</span></strong>
-        <span class="sub">${v.nota||'â€”'}</span>
+        <strong>${fmtD(v.fecha)} <span style="font-size:12px">${cobroIcon[v.cobro]||'🏦'}</span></strong>
+        <span class="sub">${v.nota||'—'}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="amount-col green">${fmt(v.monto)}</span>
-        <button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">âœ•</button>
+        <button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">✕</button>
       </div>
     </div>`).join(''):'<div class="empty">// sin ventas registradas</div>';
 }
@@ -646,14 +647,14 @@ function renderGD(filtro) {
   document.getElementById('gd-list').innerHTML=lista.length?lista.map(g=>`
     <div class="list-row">
       <div class="main-info">
-        <strong>${catInfo[g.cat]?.emoji||'ðŸ“¦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
-        <span class="sub">${fmtD(g.fecha)} Â· ${catInfo[g.cat]?.label||'Otro'}</span>
+        <strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
+        <span class="sub">${fmtD(g.fecha)} · ${catInfo[g.cat]?.label||'Otro'}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
-        <button class="btn-danger-sm" onclick="eliminarGD(${g.id})">âœ•</button>
+        <button class="btn-danger-sm" onclick="eliminarGD(${g.id})">✕</button>
       </div>
-    </div>`).join(''):'<div class="empty">// sin gastos en esta categorÃ­a</div>';
+    </div>`).join(''):'<div class="empty">// sin gastos en esta categoría</div>';
 }
 
 function renderBoletas() {
@@ -665,12 +666,12 @@ function renderBoletas() {
     const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
     const lbl=d<0?`Vencida ${Math.abs(d)}d`:d===0?'Hoy':`${d}d`;
     return `<div class="list-row">
-      <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)} Â· vence ${fmtD(b.vence)}</span></div>
+      <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)} · vence ${fmtD(b.vence)}</span></div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
         <span class="badge ${cls}">${lbl}</span>
-        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">PaguÃ©</button>
-        <button class="btn-danger-sm" onclick="eliminarBoleta(${b.id})">âœ•</button>
+        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pagué</button>
+        <button class="btn-danger-sm" onclick="eliminarBoleta(${b.id})">✕</button>
       </div>
     </div>`;
   }).join(''):'<div class="empty">// sin boletas pendientes</div>';
@@ -678,7 +679,7 @@ function renderBoletas() {
     <div class="list-row paid">
       <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)}</span></div>
       <span class="amount-col">${fmt(b.monto)}</span>
-    </div>`).join(''):'<div class="empty">// ninguna todavÃ­a</div>';
+    </div>`).join(''):'<div class="empty">// ninguna todavía</div>';
 }
 
 function renderFijos() {
@@ -693,22 +694,22 @@ function renderFijos() {
   const catM={negocio:'Negocio',personal:'Personal',servicios:'Servicios'};
   document.getElementById('fijos-list').innerHTML=state.gastosFijos.length?state.gastosFijos.map(g=>`
     <div class="list-row">
-      <div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' Â· dÃ­a '+g.dia:''}</span></div>
+      <div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' · día '+g.dia:''}</span></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="amount-col orange">${g.monto?fmt(g.monto):'â€”'}</span>
-        <button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">âœ•</button>
+        <span class="amount-col orange">${g.monto?fmt(g.monto):'—'}</span>
+        <button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">✕</button>
       </div>
     </div>`).join(''):'<div class="empty">// sin gastos fijos</div>';
 }
 
-// â•â•â• ACTIONS â•â•â•
+// ═══ ACTIONS ═══
 
-// Ventas â€” primero abre modal para elegir forma de cobro
+// Ventas — primero abre modal para elegir forma de cobro
 function iniciarVenta() {
   const fecha=document.getElementById('v-fecha').value;
   const monto=parseFloat(document.getElementById('v-monto').value);
   const nota=document.getElementById('v-nota').value.trim();
-  if(!fecha||isNaN(monto)||monto<=0){toast('CompletÃ¡ fecha y monto','error');return;}
+  if(!fecha||isNaN(monto)||monto<=0){toast('Completá fecha y monto','error');return;}
   ventaPendiente={fecha,monto,nota};
   document.getElementById('modal-cobro').classList.add('open');
 }
@@ -735,7 +736,7 @@ async function confirmarVenta(cobro) {
 
 async function eliminarVenta(id) {
   const v=state.ventas.find(x=>x.id===id);
-  if(!v||!confirm('Â¿Eliminar esta venta?'))return;
+  if(!v||!confirm('¿Eliminar esta venta?'))return;
   state[v.cobro||'banco']-=v.monto;
   state.ventas=state.ventas.filter(x=>x.id!==id);
   renderAll(); setSyncStatus('loading');
@@ -750,7 +751,7 @@ async function agregarGastoDiario() {
   const monto=parseFloat(document.getElementById('gd-monto').value);
   const cat=document.getElementById('gd-cat').value;
   const desc=document.getElementById('gd-desc').value.trim();
-  if(!fecha||isNaN(monto)||monto<=0){toast('CompletÃ¡ fecha y monto','error');return;}
+  if(!fecha||isNaN(monto)||monto<=0){toast('Completá fecha y monto','error');return;}
   const id=state.nextId++;
   // gastos diarios se descuentan del efectivo por defecto
   state.efectivo-=monto;
@@ -769,7 +770,7 @@ async function agregarGastoDiario() {
 
 async function eliminarGD(id) {
   const g=state.gastosDiarios.find(x=>x.id===id);
-  if(!g||!confirm('Â¿Eliminar este gasto?'))return;
+  if(!g||!confirm('¿Eliminar este gasto?'))return;
   state.efectivo+=g.monto;
   state.gastosDiarios=state.gastosDiarios.filter(x=>x.id!==id);
   renderAll(); setSyncStatus('loading');
@@ -784,7 +785,7 @@ async function agregarBoleta() {
   const monto=parseFloat(document.getElementById('b-monto').value);
   const fechaBoleta=document.getElementById('b-fecha').value;
   const dias=parseInt(document.getElementById('b-dias').value);
-  if(!prov||isNaN(monto)||monto<=0||!fechaBoleta){toast('CompletÃ¡ todos los campos','error');return;}
+  if(!prov||isNaN(monto)||monto<=0||!fechaBoleta){toast('Completá todos los campos','error');return;}
   const v=new Date(fechaBoleta); v.setDate(v.getDate()+dias);
   const vence=v.toISOString().split('T')[0];
   const id=state.nextId++;
@@ -803,7 +804,7 @@ async function agregarBoleta() {
 
 async function pagarBoleta(id) {
   const b=state.boletas.find(x=>x.id===id);
-  if(!b||!confirm(`Â¿Confirmar pago de ${fmt(b.monto)} a ${b.prov}?`))return;
+  if(!b||!confirm(`¿Confirmar pago de ${fmt(b.monto)} a ${b.prov}?`))return;
   b.pagada=true;
   // los pagos a proveedores se descuentan del banco por defecto
   state.banco-=b.monto;
@@ -818,7 +819,7 @@ async function pagarBoleta(id) {
 }
 
 async function eliminarBoleta(id) {
-  if(!confirm('Â¿Eliminar esta boleta?'))return;
+  if(!confirm('¿Eliminar esta boleta?'))return;
   state.boletas=state.boletas.filter(x=>x.id!==id);
   renderAll(); setSyncStatus('loading');
   try {
@@ -832,7 +833,7 @@ async function agregarFijo() {
   const monto=parseFloat(document.getElementById('gf-monto').value);
   const cat=document.getElementById('gf-cat').value;
   const dia=parseInt(document.getElementById('gf-dia').value)||null;
-  if(!desc){toast('IngresÃ¡ una descripciÃ³n','error');return;}
+  if(!desc){toast('Ingresá una descripción','error');return;}
   const id=state.nextId++;
   state.gastosFijos.push({id,desc,monto:isNaN(monto)?0:monto,cat,dia});
   document.getElementById('gf-desc').value='';
@@ -849,7 +850,7 @@ async function agregarFijo() {
 }
 
 async function eliminarFijo(id) {
-  if(!confirm('Â¿Eliminar este gasto fijo?'))return;
+  if(!confirm('¿Eliminar este gasto fijo?'))return;
   state.gastosFijos=state.gastosFijos.filter(x=>x.id!==id);
   renderAll(); setSyncStatus('loading');
   try {
