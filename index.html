@@ -24,6 +24,24 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;}
+
+  /* ── PIN SCREEN ── */
+  #pin-screen{position:fixed;inset:0;background:var(--bg);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;}
+  #pin-screen.hidden{display:none;}
+  .pin-logo{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--accent);letter-spacing:.08em;}
+  .pin-title{font-size:13px;color:var(--text3);font-family:var(--mono);}
+  .pin-dots{display:flex;gap:12px;}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);transition:all .15s;}
+  .pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+  .pin-dot.error{background:var(--red);border-color:var(--red);}
+  .pin-keypad{display:grid;grid-template-columns:repeat(3,72px);gap:10px;}
+  .pin-key{height:56px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);font-family:var(--mono);font-size:20px;font-weight:500;color:var(--text);cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;}
+  .pin-key:hover{background:var(--bg3);border-color:var(--accent);}
+  .pin-key:active{transform:scale(.93);}
+  .pin-key.del{font-size:16px;color:var(--text3);}
+  .pin-error{font-size:12px;font-family:var(--mono);color:var(--red);height:16px;text-align:center;}
+
+  /* ── APP ── */
   .app-shell{display:flex;min-height:100vh;}
   .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;overflow:hidden;}
   .sidebar-logo{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--accent);letter-spacing:.05em;padding:0 8px 20px;border-bottom:1px solid var(--border);margin-bottom:12px;}
@@ -114,36 +132,68 @@
   .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:1000;font-family:var(--mono);color:var(--text2);font-size:13px;}
   .loading-spinner{width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg)}}
-  /* Modal */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
   .modal-overlay.open{opacity:1;pointer-events:all;}
   .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;width:100%;max-width:440px;margin:16px;}
   .modal-title{font-size:16px;font-weight:600;margin-bottom:6px;}
   .modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
   .modal-actions{display:flex;gap:8px;margin-top:16px;}
-  /* Saldo breakdown card */
   .saldo-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px;}
   .saldo-pocket{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;}
   .saldo-pocket .pocket-label{font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-  .saldo-pocket .pocket-icon{font-size:16px;}
   .saldo-pocket .pocket-value{font-family:var(--mono);font-size:20px;font-weight:500;margin-bottom:10px;}
   .saldo-pocket .pocket-edit{position:absolute;top:12px;right:12px;}
-  @media(max-width:700px){.sidebar{display:none;}.main{padding:16px;}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid{grid-template-columns:1fr;}.form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid-4{grid-template-columns:repeat(2,minmax(0,1fr));}.two-col{grid-template-columns:1fr;}.saldo-breakdown{grid-template-columns:1fr;}}
+  /* comision box */
+  .comision-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-top:10px;font-family:var(--mono);font-size:12px;display:none;}
+  .comision-box.show{display:block;}
+  .comision-row{display:flex;justify-content:space-between;margin-bottom:4px;color:var(--text2);}
+  .comision-row:last-child{margin-bottom:0;color:var(--text);font-weight:500;border-top:1px solid var(--border);padding-top:6px;margin-top:6px;}
+  .comision-row span:last-child{color:var(--red);}
+  .comision-row.neto span:last-child{color:var(--green);}
+  @media(max-width:700px){.sidebar{display:none;}.main{padding:16px;}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid{grid-template-columns:1fr;}.form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid-4{grid-template-columns:repeat(2,minmax(0,1fr));}.two-col{grid-template-columns:1fr;}.saldo-breakdown{grid-template-columns:1fr;}.pin-keypad{grid-template-columns:repeat(3,64px);}}
   ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
 </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loading">
-  <div class="loading-spinner"></div>
-  <span>Conectando con la base de datos...</span>
+<!-- ══ PIN SCREEN ══ -->
+<div id="pin-screen">
+  <div class="pin-logo">MIS FINANZAS</div>
+  <div class="pin-title">Ingresa tu codigo de acceso</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinKey('1')">1</button>
+    <button class="pin-key" onclick="pinKey('2')">2</button>
+    <button class="pin-key" onclick="pinKey('3')">3</button>
+    <button class="pin-key" onclick="pinKey('4')">4</button>
+    <button class="pin-key" onclick="pinKey('5')">5</button>
+    <button class="pin-key" onclick="pinKey('6')">6</button>
+    <button class="pin-key" onclick="pinKey('7')">7</button>
+    <button class="pin-key" onclick="pinKey('8')">8</button>
+    <button class="pin-key" onclick="pinKey('9')">9</button>
+    <button class="pin-key del" onclick="pinKey('del')" style="grid-column:1">&#9003;</button>
+    <button class="pin-key" onclick="pinKey('0')">0</button>
+    <div></div>
+  </div>
 </div>
 
-<!-- MODAL EDITAR SALDO -->
+<!-- ══ LOADING ══ -->
+<div class="loading-overlay" id="loading" style="display:none">
+  <div class="loading-spinner"></div>
+  <span>Conectando...</span>
+</div>
+
+<!-- ══ MODAL SALDO ══ -->
 <div class="modal-overlay" id="modal-saldo">
   <div class="modal">
     <div class="modal-title">Editar saldo</div>
-    <div class="modal-sub" id="modal-saldo-sub">Modificá el monto disponible</div>
+    <div class="modal-sub" id="modal-saldo-sub">Modificar monto</div>
     <div class="form-full">
       <label class="form-label">Nuevo monto ($)</label>
       <input type="number" id="modal-saldo-input" placeholder="120000">
@@ -155,23 +205,31 @@
   </div>
 </div>
 
-<!-- MODAL FORMA DE COBRO (ventas) -->
+<!-- ══ MODAL COBRO (ventas) ══ -->
 <div class="modal-overlay" id="modal-cobro">
   <div class="modal">
-    <div class="modal-title">¿Cómo cobraste?</div>
-    <div class="modal-sub">Elegí dónde va a entrar el dinero de esta venta</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;">
-      <button class="btn" id="cobro-efectivo" onclick="confirmarVenta('efectivo')" style="justify-content:flex-start;display:flex;align-items:center;gap:10px;padding:12px 16px;">
+    <div class="modal-title">Como cobraste?</div>
+    <div class="modal-sub">Elegí el medio de pago para calcular la comision</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn" onclick="confirmarVenta('efectivo','none')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-align:left;">
         <span style="font-size:20px">💵</span>
-        <div style="text-align:left"><div style="font-weight:600;color:var(--text)">Efectivo</div><div style="font-size:12px;color:var(--text3)">Billetes en mano</div></div>
+        <div><div style="font-weight:600;color:var(--text)">Efectivo</div><div style="font-size:12px;color:var(--text3)">Sin comision</div></div>
       </button>
-      <button class="btn" id="cobro-banco" onclick="confirmarVenta('banco')" style="justify-content:flex-start;display:flex;align-items:center;gap:10px;padding:12px 16px;">
-        <span style="font-size:20px">🏦</span>
-        <div style="text-align:left"><div style="font-weight:600;color:var(--text)">Banco / MP</div><div style="font-size:12px;color:var(--text3)">Transferencia o Mercado Pago</div></div>
+      <button class="btn" onclick="confirmarVenta('banco','qr')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-align:left;">
+        <span style="font-size:20px">📱</span>
+        <div><div style="font-weight:600;color:var(--text)">QR / Transferencia</div><div style="font-size:12px;color:var(--text3)">0.80% + IVA</div></div>
       </button>
-      <button class="btn" id="cobro-liquidar" onclick="confirmarVenta('a_liquidar')" style="justify-content:flex-start;display:flex;align-items:center;gap:10px;padding:12px 16px;">
+      <button class="btn" onclick="confirmarVenta('banco','debito')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-align:left;">
         <span style="font-size:20px">💳</span>
-        <div style="text-align:left"><div style="font-weight:600;color:var(--text)">A liquidar</div><div style="font-size:12px;color:var(--text3)">Tarjeta de crédito, acredita después</div></div>
+        <div><div style="font-weight:600;color:var(--text)">Tarjeta de debito</div><div style="font-size:12px;color:var(--text3)">3.40% + IVA</div></div>
+      </button>
+      <button class="btn" onclick="confirmarVenta('a_liquidar','prepaga')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-align:left;">
+        <span style="font-size:20px">🏥</span>
+        <div><div style="font-weight:600;color:var(--text)">Tarjeta prepaga</div><div style="font-size:12px;color:var(--text3)">3.93% + IVA</div></div>
+      </button>
+      <button class="btn" onclick="confirmarVenta('a_liquidar','credito')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-align:left;">
+        <span style="font-size:20px">💰</span>
+        <div><div style="font-weight:600;color:var(--text)">Tarjeta de credito</div><div style="font-size:12px;color:var(--text3)">6.60% + IVA</div></div>
       </button>
     </div>
     <div class="modal-actions">
@@ -180,27 +238,28 @@
   </div>
 </div>
 
-<div class="app-shell">
+<!-- ══ APP ══ -->
+<div class="app-shell" id="app-shell" style="display:none">
   <aside class="sidebar">
-    <div class="sidebar-logo">MIS FINANZAS<span>negocio · personal</span></div>
+    <div class="sidebar-logo">MIS FINANZAS<span>negocio - personal</span></div>
     <div class="sync-bar"><div class="sync-dot loading" id="sync-dot"></div><span id="sync-text">conectando...</span></div>
     <div class="sidebar-section">Principal</div>
     <div class="nav-item active" onclick="goTo('resumen',this)"><span class="nav-icon">◈</span> Resumen</div>
     <div class="nav-item" onclick="goTo('ventas',this)"><span class="nav-icon">↑</span> Ventas</div>
     <div class="sidebar-section">Egresos</div>
-    <div class="nav-item" onclick="goTo('gastos-diarios',this)"><span class="nav-icon">🛒</span> Gastos del día</div>
+    <div class="nav-item" onclick="goTo('gastos-diarios',this)"><span class="nav-icon">🛒</span> Gastos del dia</div>
     <div class="nav-item" onclick="goTo('boletas',this)"><span class="nav-icon">◻</span> Boletas</div>
     <div class="nav-item" onclick="goTo('fijos',this)"><span class="nav-icon">⟳</span> Gastos fijos</div>
     <div class="saldo-widget">
       <div class="label">SALDO TOTAL</div>
-      <div class="amount pos" id="sidebar-amount">—</div>
+      <div class="amount pos" id="sidebar-amount">---</div>
       <div class="saldo-mini-grid">
-        <div class="saldo-mini"><div class="ml">💵 Efectivo</div><div class="mv green" id="sb-efectivo">—</div></div>
-        <div class="saldo-mini"><div class="ml">🏦 Banco</div><div class="mv blue" id="sb-banco">—</div></div>
-        <div class="saldo-mini" style="grid-column:span 2"><div class="ml">💳 A liquidar</div><div class="mv purple" id="sb-liquidar">—</div></div>
+        <div class="saldo-mini"><div class="ml">💵 Efectivo</div><div class="mv green" id="sb-efectivo">---</div></div>
+        <div class="saldo-mini"><div class="ml">🏦 Banco</div><div class="mv blue" id="sb-banco">---</div></div>
+        <div class="saldo-mini" style="grid-column:span 2"><div class="ml">💳 A liquidar</div><div class="mv purple" id="sb-liquidar">---</div></div>
       </div>
       <div class="progress-wrap" id="sidebar-progress" style="display:none">
-        <div class="progress-label"><span id="prog-left">—</span><span id="prog-right">—</span></div>
+        <div class="progress-label"><span id="prog-left">---</span><span id="prog-right">---</span></div>
         <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
       </div>
     </div>
@@ -211,32 +270,30 @@
     <!-- RESUMEN -->
     <div id="screen-resumen" class="screen active">
       <div class="page-title">Resumen</div>
-      <div class="page-subtitle">Vista general de tu situación financiera</div>
+      <div class="page-subtitle">Vista general de tu situacion financiera</div>
       <div id="alertas-wrap"></div>
-
-      <!-- Saldo breakdown -->
       <div class="saldo-breakdown" id="saldo-breakdown"></div>
-
       <div class="metrics" id="metrics-resumen"></div>
       <div class="two-col">
-        <div class="card"><div class="card-title">Vencimientos próximos</div><div id="proximos-list"></div></div>
-        <div class="card"><div class="card-title">Últimos gastos del día</div><div id="ultimos-gd"></div></div>
+        <div class="card"><div class="card-title">Vencimientos proximos</div><div id="proximos-list"></div></div>
+        <div class="card"><div class="card-title">Ultimos gastos del dia</div><div id="ultimos-gd"></div></div>
       </div>
-      <div class="card"><div class="card-title">Ventas — últimos 7 días</div><div class="mini-chart" id="week-chart"></div></div>
+      <div class="card"><div class="card-title">Ventas - ultimos 7 dias</div><div class="mini-chart" id="week-chart"></div></div>
     </div>
 
     <!-- VENTAS -->
     <div id="screen-ventas" class="screen">
       <div class="page-title">Ventas</div>
-      <div class="page-subtitle">Registrá el monto vendido cada día</div>
+      <div class="page-subtitle">Registra el monto vendido cada dia</div>
       <div class="card">
         <div class="card-title">Nueva venta</div>
         <div class="form-grid">
           <div><label class="form-label">Fecha</label><input type="date" id="v-fecha"></div>
-          <div><label class="form-label">Monto ($)</label><input type="number" id="v-monto" placeholder="95000"></div>
+          <div><label class="form-label">Monto bruto ($)</label><input type="number" id="v-monto" placeholder="95000" oninput="actualizarComision()"></div>
         </div>
-        <div class="form-full"><label class="form-label">Nota</label><input type="text" id="v-nota" placeholder="Ej: buen sábado, faltó mercadería..."></div>
-        <button class="btn btn-primary" style="width:100%" onclick="iniciarVenta()">+ Registrar venta</button>
+        <div class="form-full"><label class="form-label">Nota</label><input type="text" id="v-nota" placeholder="Ej: buen sabado, falto mercaderia..."></div>
+        <div class="comision-box" id="comision-preview"></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="iniciarVenta()">+ Registrar venta</button>
       </div>
       <div class="metrics" id="metrics-ventas"></div>
       <div class="card"><div class="card-title">Historial</div><div id="ventas-list"></div></div>
@@ -244,18 +301,18 @@
 
     <!-- GASTOS DIARIOS -->
     <div id="screen-gastos-diarios" class="screen">
-      <div class="page-title">Gastos del día</div>
-      <div class="page-subtitle">Supermercado, carnicería, verdulería y cualquier gasto cotidiano</div>
+      <div class="page-title">Gastos del dia</div>
+      <div class="page-subtitle">Supermercado, carniceria, verduleria y cualquier gasto cotidiano</div>
       <div class="card">
         <div class="card-title">Nuevo gasto</div>
         <div class="form-grid-3">
           <div><label class="form-label">Fecha</label><input type="date" id="gd-fecha"></div>
           <div><label class="form-label">Monto ($)</label><input type="number" id="gd-monto" placeholder="3500"></div>
-          <div><label class="form-label">Categoría</label>
+          <div><label class="form-label">Categoria</label>
             <select id="gd-cat">
               <option value="super">🛒 Supermercado</option>
-              <option value="carne">🥩 Carnicería</option>
-              <option value="verdura">🥦 Verdulería</option>
+              <option value="carne">🥩 Carniceria</option>
+              <option value="verdura">🥦 Verduleria</option>
               <option value="limpieza">🧹 Limpieza/hogar</option>
               <option value="comida">🍕 Comida/delivery</option>
               <option value="personal">🧴 Personal/higiene</option>
@@ -263,7 +320,15 @@
             </select>
           </div>
         </div>
-        <div class="form-full"><label class="form-label">Descripción</label><input type="text" id="gd-desc" placeholder="Ej: compra semanal en Dia, carne para la semana..."></div>
+        <div class="form-grid">
+          <div><label class="form-label">Descripcion</label><input type="text" id="gd-desc" placeholder="Ej: compra semanal en Dia..."></div>
+          <div><label class="form-label">Pague con</label>
+            <select id="gd-pago">
+              <option value="efectivo">💵 Efectivo</option>
+              <option value="banco">🏦 Banco / MP</option>
+            </select>
+          </div>
+        </div>
         <button class="btn btn-primary" style="width:100%" onclick="agregarGastoDiario()">+ Agregar gasto</button>
       </div>
       <div class="metrics" id="metrics-gd"></div>
@@ -272,8 +337,8 @@
         <div class="tabs">
           <button class="tab active" onclick="filtrarGD('todo',this)">Todos</button>
           <button class="tab" onclick="filtrarGD('super',this)">Supermercado</button>
-          <button class="tab" onclick="filtrarGD('carne',this)">Carnicería</button>
-          <button class="tab" onclick="filtrarGD('verdura',this)">Verdulería</button>
+          <button class="tab" onclick="filtrarGD('carne',this)">Carniceria</button>
+          <button class="tab" onclick="filtrarGD('verdura',this)">Verduleria</button>
           <button class="tab" onclick="filtrarGD('otros',this)">Otros</button>
         </div>
         <div id="gd-list"></div>
@@ -283,7 +348,7 @@
     <!-- BOLETAS -->
     <div id="screen-boletas" class="screen">
       <div class="page-title">Boletas de proveedores</div>
-      <div class="page-subtitle">Controlá vencimientos y pagos a Total, Lonco, Abineme y Goñi</div>
+      <div class="page-subtitle">Controla vencimientos y pagos</div>
       <div class="card">
         <div class="card-title">Nueva boleta</div>
         <div class="form-grid">
@@ -294,11 +359,11 @@
         </div>
         <div class="form-grid">
           <div><label class="form-label">Fecha de boleta</label><input type="date" id="b-fecha"></div>
-          <div><label class="form-label">Días para vencer</label>
+          <div><label class="form-label">Dias para vencer</label>
             <select id="b-dias">
               <option value="0">Al recibir</option>
-              <option value="10" selected>10 días (Lonco / Abineme)</option>
-              <option value="30">30 días (Total)</option>
+              <option value="10" selected>10 dias (Lonco / Abineme)</option>
+              <option value="30">30 dias (Total)</option>
             </select>
           </div>
         </div>
@@ -311,18 +376,18 @@
     <!-- GASTOS FIJOS -->
     <div id="screen-fijos" class="screen">
       <div class="page-title">Gastos fijos</div>
-      <div class="page-subtitle">Alquileres, servicios y otros pagos mensuales recurrentes</div>
+      <div class="page-subtitle">Alquileres, servicios y pagos mensuales</div>
       <div class="card">
         <div class="card-title">Nuevo gasto fijo</div>
         <div class="form-grid">
-          <div><label class="form-label">Descripción</label><input type="text" id="gf-desc" placeholder="Ej: Alquiler negocio"></div>
+          <div><label class="form-label">Descripcion</label><input type="text" id="gf-desc" placeholder="Ej: Alquiler negocio"></div>
           <div><label class="form-label">Monto mensual ($)</label><input type="number" id="gf-monto" placeholder="120000"></div>
         </div>
         <div class="form-grid">
-          <div><label class="form-label">Categoría</label>
+          <div><label class="form-label">Categoria</label>
             <select id="gf-cat"><option value="negocio">Negocio</option><option value="personal">Personal</option><option value="servicios">Servicios</option></select>
           </div>
-          <div><label class="form-label">Día del mes</label><input type="number" id="gf-dia" placeholder="5" min="1" max="31"></div>
+          <div><label class="form-label">Dia del mes</label><input type="number" id="gf-dia" placeholder="5" min="1" max="31"></div>
         </div>
         <button class="btn btn-primary" style="width:100%" onclick="agregarFijo()">+ Agregar gasto fijo</button>
       </div>
@@ -336,131 +401,182 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://fekhvycxgormbrzzfbyg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZla2h2eWN4Z29ybWJyenpmYnlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTI5MjYsImV4cCI6MjA4OTYyODkyNn0.rqu6cVsJMMXEtmF9_VGVPugFotzumfBsM65ENagft2A';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ══ SUPABASE ══
+const SUPABASE_URL='https://fekhvycxgormbrzzfbyg.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZla2h2eWN4Z29ybWJyenpmYnlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTI5MjYsImV4cCI6MjA4OTYyODkyNn0.rqu6cVsJMMXEtmF9_VGVPugFotzumfBsM65ENagft2A';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let state = {
-  efectivo: 0, banco: 0, a_liquidar: 0,
-  nextId: 20,
-  ventas: [], gastosDiarios: [], boletas: [], gastosFijos: [],
-};
+// ══ PIN ══
+const PIN_CORRECT='8798';
+let pinBuffer='';
 
-// venta pendiente de confirmar forma de cobro
-let ventaPendiente = null;
-
-// edicion de saldo pendiente
-let editSaldoKey = null;
-
-const TODAY = new Date().toISOString().split('T')[0];
-
-function saldoTotal() { return state.efectivo + state.banco + state.a_liquidar; }
-
-function fmt(n) {
-  if (n == null) return '—';
-  const abs = Math.round(Math.abs(n));
-  return (n < 0 ? '−' : '') + '$' + abs.toLocaleString('es-AR');
+function pinKey(k){
+  const err=document.getElementById('pin-error');
+  err.textContent='';
+  if(k==='del'){
+    pinBuffer=pinBuffer.slice(0,-1);
+  } else if(pinBuffer.length<4){
+    pinBuffer+=k;
+  }
+  // update dots
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    d.className='pin-dot'+(i<pinBuffer.length?' filled':'');
+  }
+  if(pinBuffer.length===4){
+    if(pinBuffer===PIN_CORRECT){
+      document.getElementById('pin-screen').classList.add('hidden');
+      document.getElementById('app-shell').style.display='flex';
+      document.getElementById('loading').style.display='flex';
+      loadAll();
+    } else {
+      // shake + error
+      for(let i=0;i<4;i++) document.getElementById('pd'+i).className='pin-dot error';
+      err.textContent='Codigo incorrecto';
+      setTimeout(()=>{
+        pinBuffer='';
+        for(let i=0;i<4;i++) document.getElementById('pd'+i).className='pin-dot';
+        err.textContent='';
+      },1000);
+    }
+  }
 }
-function fmtD(s) { if(!s) return ''; const [y,m,d]=s.split('-'); return d+'/'+m; }
-function diasHasta(s) {
-  const hoy=new Date(); hoy.setHours(0,0,0,0);
-  const f=new Date(s); f.setHours(0,0,0,0);
+
+// keyboard support for PIN
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('pin-screen').classList.contains('hidden')) return;
+  if(e.key>='0'&&e.key<='9') pinKey(e.key);
+  if(e.key==='Backspace') pinKey('del');
+});
+
+// ══ COMISIONES ══
+const COMISIONES={
+  none:{label:'Efectivo',rate:0,bolsillo:'efectivo'},
+  qr:{label:'QR / Transferencia',rate:0.0080,bolsillo:'banco'},
+  debito:{label:'Tarjeta de debito',rate:0.0340,bolsillo:'banco'},
+  prepaga:{label:'Tarjeta prepaga',rate:0.0393,bolsillo:'a_liquidar'},
+  credito:{label:'Tarjeta de credito',rate:0.0660,bolsillo:'a_liquidar'},
+};
+const IVA=0.21;
+
+function calcComision(monto,tipo){
+  const c=COMISIONES[tipo]||COMISIONES.none;
+  const comBruta=monto*c.rate;
+  const ivaComision=comBruta*IVA;
+  const totalCom=comBruta+ivaComision;
+  const neto=monto-totalCom;
+  return {comBruta,ivaComision,totalCom,neto};
+}
+
+function actualizarComision(){
+  const monto=parseFloat(document.getElementById('v-monto').value);
+  const box=document.getElementById('comision-preview');
+  if(!monto||monto<=0){box.className='comision-box';return;}
+  // show a preview for debito as default hint
+  box.className='comision-box show';
+  box.innerHTML='<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Elegiras el medio de pago al guardar. Ejemplo con debito (3.40% + IVA):</div>'+comisionHTML(monto,'debito');
+}
+
+function comisionHTML(monto,tipo){
+  const {comBruta,ivaComision,totalCom,neto}=calcComision(monto,tipo);
+  const c=COMISIONES[tipo];
+  return `
+    <div class="comision-row"><span>Comision (${(c.rate*100).toFixed(2)}%)</span><span>${fmt(comBruta)}</span></div>
+    <div class="comision-row"><span>IVA sobre comision (21%)</span><span>${fmt(ivaComision)}</span></div>
+    <div class="comision-row"><span>Total comision</span><span>${fmt(totalCom)}</span></div>
+    <div class="comision-row neto"><span>Neto que recibis</span><span style="color:var(--green)">${fmt(neto)}</span></div>
+  `;
+}
+
+// ══ STATE ══
+let state={efectivo:0,banco:0,a_liquidar:0,nextId:20,ventas:[],gastosDiarios:[],boletas:[],gastosFijos:[]};
+let ventaPendiente=null;
+let editSaldoKey=null;
+
+const TODAY=new Date().toISOString().split('T')[0];
+function saldoTotal(){return state.efectivo+state.banco+state.a_liquidar;}
+
+function fmt(n){
+  if(n==null)return '---';
+  const abs=Math.round(Math.abs(n));
+  return (n<0?'-':'')+' $'+abs.toLocaleString('es-AR');
+}
+function fmtD(s){if(!s)return '';const[y,m,d]=s.split('-');return d+'/'+m;}
+function diasHasta(s){
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const f=new Date(s);f.setHours(0,0,0,0);
   return Math.round((f-hoy)/86400000);
 }
-function saldoCls(n) { return n<0?'red':n<200000?'orange':'green'; }
+function saldoCls(n){return n<0?'red':n<200000?'orange':'green';}
 
-const catInfo = {
-  super:{label:'Supermercado',emoji:'🛒'},carne:{label:'Carnicería',emoji:'🥩'},
-  verdura:{label:'Verdulería',emoji:'🥦'},limpieza:{label:'Limpieza',emoji:'🧹'},
+const catInfo={
+  super:{label:'Supermercado',emoji:'🛒'},carne:{label:'Carniceria',emoji:'🥩'},
+  verdura:{label:'Verduleria',emoji:'🥦'},limpieza:{label:'Limpieza',emoji:'🧹'},
   comida:{label:'Comida',emoji:'🍕'},personal:{label:'Personal',emoji:'🧴'},
   otro:{label:'Otro',emoji:'📦'},
 };
+const pagoIcon={efectivo:'💵',banco:'🏦',a_liquidar:'💳'};
 
-function toast(msg, type='success') {
+function toast(msg,type='success'){
   const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast '+type+' show';
+  t.textContent=msg;t.className='toast '+type+' show';
   setTimeout(()=>t.classList.remove('show'),2500);
 }
-
-function setSyncStatus(status) {
-  const dot=document.getElementById('sync-dot');
-  const txt=document.getElementById('sync-text');
-  if(status==='ok'){dot.className='sync-dot';txt.textContent='sincronizado';}
-  else if(status==='loading'){dot.className='sync-dot loading';txt.textContent='guardando...';}
-  else{dot.className='sync-dot off';txt.textContent='sin conexión';}
+function setSyncStatus(s){
+  const dot=document.getElementById('sync-dot'),txt=document.getElementById('sync-text');
+  if(s==='ok'){dot.className='sync-dot';txt.textContent='sincronizado';}
+  else if(s==='loading'){dot.className='sync-dot loading';txt.textContent='guardando...';}
+  else{dot.className='sync-dot off';txt.textContent='sin conexion';}
 }
 
-// ═══ MODAL SALDO ═══
-function abrirModalSaldo(key) {
-  editSaldoKey = key;
-  const labels = {efectivo:'Efectivo 💵', banco:'Banco / MP 🏦', a_liquidar:'A liquidar 💳'};
-  document.getElementById('modal-saldo-sub').textContent = 'Editando: ' + labels[key];
-  document.getElementById('modal-saldo-input').value = Math.round(state[key]);
+// ══ MODAL SALDO ══
+function abrirModalSaldo(key){
+  editSaldoKey=key;
+  const labels={efectivo:'Efectivo',banco:'Banco / MP',a_liquidar:'A liquidar'};
+  document.getElementById('modal-saldo-sub').textContent='Editando: '+labels[key];
+  document.getElementById('modal-saldo-input').value=Math.round(state[key]);
   document.getElementById('modal-saldo').classList.add('open');
   setTimeout(()=>document.getElementById('modal-saldo-input').focus(),100);
 }
-
-function cerrarModalSaldo() {
-  document.getElementById('modal-saldo').classList.remove('open');
-  editSaldoKey = null;
+function cerrarModalSaldo(){document.getElementById('modal-saldo').classList.remove('open');editSaldoKey=null;}
+async function confirmarEditSaldo(){
+  const val=parseFloat(document.getElementById('modal-saldo-input').value);
+  if(isNaN(val)||val<0){toast('Ingresa un monto valido','error');return;}
+  state[editSaldoKey]=val;
+  cerrarModalSaldo();renderAll();setSyncStatus('loading');
+  try{await saveEstado();setSyncStatus('ok');toast('Saldo actualizado');}
+  catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
+document.getElementById('modal-saldo').addEventListener('click',function(e){if(e.target===this)cerrarModalSaldo();});
+document.getElementById('modal-saldo-input').addEventListener('keydown',function(e){if(e.key==='Enter')confirmarEditSaldo();});
 
-async function confirmarEditSaldo() {
-  const val = parseFloat(document.getElementById('modal-saldo-input').value);
-  if (isNaN(val) || val < 0) { toast('Ingresá un monto válido','error'); return; }
-  state[editSaldoKey] = val;
-  cerrarModalSaldo();
-  renderAll();
+// ══ MODAL COBRO ══
+function cerrarModalCobro(){document.getElementById('modal-cobro').classList.remove('open');ventaPendiente=null;}
+document.getElementById('modal-cobro').addEventListener('click',function(e){if(e.target===this)cerrarModalCobro();});
+
+// ══ LOAD ══
+async function loadAll(){
   setSyncStatus('loading');
-  try {
-    await saveEstado();
-    setSyncStatus('ok'); toast('Saldo actualizado');
-  } catch(e) { setSyncStatus('error'); toast('Error al guardar','error'); }
-}
-
-// Cerrar modal al clickear overlay
-document.getElementById('modal-saldo').addEventListener('click', function(e){
-  if(e.target===this) cerrarModalSaldo();
-});
-
-// Enter en input del modal
-document.getElementById('modal-saldo-input').addEventListener('keydown', function(e){
-  if(e.key==='Enter') confirmarEditSaldo();
-});
-
-// ═══ MODAL COBRO ═══
-function cerrarModalCobro() {
-  document.getElementById('modal-cobro').classList.remove('open');
-  ventaPendiente = null;
-}
-
-document.getElementById('modal-cobro').addEventListener('click', function(e){
-  if(e.target===this) cerrarModalCobro();
-});
-
-// ═══ LOAD ═══
-async function loadAll() {
-  setSyncStatus('loading');
-  try {
-    const [{data:est},{data:ventas},{data:gd},{data:boletas},{data:fijos}] = await Promise.all([
+  try{
+    const[{data:est},{data:ventas},{data:gd},{data:boletas},{data:fijos}]=await Promise.all([
       sb.from('estado').select('*').single(),
       sb.from('ventas').select('*').order('fecha',{ascending:false}),
       sb.from('gastos_diarios').select('*').order('fecha',{ascending:false}),
       sb.from('boletas').select('*').order('vence'),
       sb.from('gastos_fijos').select('*').order('id'),
     ]);
-    state.efectivo   = Number(est?.efectivo   ?? 120000);
-    state.banco      = Number(est?.banco      ?? 377281);
-    state.a_liquidar = Number(est?.a_liquidar ?? 0);
-    state.nextId     = est?.next_id ?? 20;
-    state.ventas     = (ventas||[]).map(v=>({id:v.id,fecha:v.fecha,monto:Number(v.monto),nota:v.nota||'',cobro:v.cobro||'banco'}));
-    state.gastosDiarios = (gd||[]).map(g=>({id:g.id,fecha:g.fecha,monto:Number(g.monto),cat:g.cat,desc:g.descripcion||''}));
-    state.boletas    = (boletas||[]).map(b=>({id:b.id,prov:b.prov,monto:Number(b.monto),fechaBoleta:b.fecha_boleta,vence:b.vence,pagada:b.pagada}));
-    state.gastosFijos= (fijos||[]).map(g=>({id:g.id,desc:g.descripcion||'',monto:Number(g.monto||0),cat:g.cat,dia:g.dia}));
+    state.efectivo=Number(est?.efectivo??120000);
+    state.banco=Number(est?.banco??377281);
+    state.a_liquidar=Number(est?.a_liquidar??0);
+    state.nextId=est?.next_id??20;
+    state.ventas=(ventas||[]).map(v=>({id:v.id,fecha:v.fecha,monto:Number(v.monto),nota:v.nota||'',cobro:v.cobro||'banco',tipoCobro:v.tipo_cobro||'none',comision:Number(v.comision||0)}));
+    state.gastosDiarios=(gd||[]).map(g=>({id:g.id,fecha:g.fecha,monto:Number(g.monto),cat:g.cat,desc:g.descripcion||'',pago:g.pago||'efectivo'}));
+    state.boletas=(boletas||[]).map(b=>({id:b.id,prov:b.prov,monto:Number(b.monto),fechaBoleta:b.fecha_boleta,vence:b.vence,pagada:b.pagada}));
+    state.gastosFijos=(fijos||[]).map(g=>({id:g.id,desc:g.descripcion||'',monto:Number(g.monto||0),cat:g.cat,dia:g.dia}));
     setSyncStatus('ok');
     document.getElementById('loading').style.display='none';
     renderAll();
-  } catch(e) {
+  }catch(e){
     setSyncStatus('error');
     document.getElementById('loading').style.display='none';
     toast('Error al conectar','error');
@@ -468,20 +584,16 @@ async function loadAll() {
   }
 }
 
-async function saveEstado() {
+async function saveEstado(){
   await sb.from('estado').upsert({
-    id:'principal',
-    saldo: saldoTotal(),
-    efectivo: state.efectivo,
-    banco: state.banco,
-    a_liquidar: state.a_liquidar,
-    next_id: state.nextId,
-    updated_at: new Date().toISOString()
+    id:'principal',saldo:saldoTotal(),
+    efectivo:state.efectivo,banco:state.banco,a_liquidar:state.a_liquidar,
+    next_id:state.nextId,updated_at:new Date().toISOString()
   });
 }
 
-// ═══ NAV ═══
-function goTo(name, el) {
+// ══ NAV ══
+function goTo(name,el){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
@@ -489,14 +601,14 @@ function goTo(name, el) {
   renderAll();
 }
 
-// ═══ RENDER ═══
-function renderAll() {
-  renderSidebar(); renderResumen(); renderVentas();
-  renderGD(gdFilter); renderBoletas(); renderFijos();
+// ══ RENDER ══
+function renderAll(){
+  renderSidebar();renderResumen();renderVentas();
+  renderGD(gdFilter);renderBoletas();renderFijos();
 }
 
-function renderSidebar() {
-  const total = saldoTotal();
+function renderSidebar(){
+  const total=saldoTotal();
   const sa=document.getElementById('sidebar-amount');
   sa.textContent=fmt(total);
   sa.className='amount '+(total<0?'neg':total<200000?'warn':'pos');
@@ -511,34 +623,31 @@ function renderSidebar() {
     document.getElementById('prog-fill').style.width=pct+'%';
     document.getElementById('prog-left').textContent=pct+'% juntado';
     document.getElementById('prog-right').textContent='falta '+fmt(bTotal.monto-total);
-  } else { sp.style.display='none'; }
+  }else{sp.style.display='none';}
 }
 
-function renderResumen() {
-  const total = saldoTotal();
-
-  // Alertas boletas
+function renderResumen(){
+  const total=saldoTotal();
   const alertas=state.boletas.filter(b=>!b.pagada&&diasHasta(b.vence)<=3);
   document.getElementById('alertas-wrap').innerHTML=alertas.map(b=>{
     const d=diasHasta(b.vence);
-    const txt=d<0?`Vencida hace ${Math.abs(d)} días`:d===0?'Vence hoy':`Vence en ${d} días`;
-    return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> — ${fmt(b.monto)}</span><span>${txt}</span></div>`;
+    const txt=d<0?`Vencida hace ${Math.abs(d)} dias`:d===0?'Vence hoy':`Vence en ${d} dias`;
+    return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> - ${fmt(b.monto)}</span><span>${txt}</span></div>`;
   }).join('');
 
-  // Saldo breakdown cards
-  document.getElementById('saldo-breakdown').innerHTML = `
+  document.getElementById('saldo-breakdown').innerHTML=`
     <div class="saldo-pocket">
-      <div class="pocket-label"><span class="pocket-icon">💵</span> EFECTIVO</div>
+      <div class="pocket-label">💵 EFECTIVO</div>
       <div class="pocket-value green">${fmt(state.efectivo)}</div>
       <button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('efectivo')">Editar</button>
     </div>
     <div class="saldo-pocket">
-      <div class="pocket-label"><span class="pocket-icon">🏦</span> BANCO / MP</div>
+      <div class="pocket-label">🏦 BANCO / MP</div>
       <div class="pocket-value blue">${fmt(state.banco)}</div>
       <button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('banco')">Editar</button>
     </div>
     <div class="saldo-pocket">
-      <div class="pocket-label"><span class="pocket-icon">💳</span> A LIQUIDAR</div>
+      <div class="pocket-label">💳 A LIQUIDAR</div>
       <div class="pocket-value purple">${fmt(state.a_liquidar)}</div>
       <button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('a_liquidar')">Editar</button>
     </div>
@@ -549,14 +658,15 @@ function renderResumen() {
   const bPend=state.boletas.filter(b=>!b.pagada).reduce((a,b)=>a+b.monto,0);
   const prox7=state.boletas.filter(b=>!b.pagada&&diasHasta(b.vence)<=7&&diasHasta(b.vence)>=0).reduce((a,b)=>a+b.monto,0);
   const gdSem=state.gastosDiarios.filter(g=>diasHasta(g.fecha)>=-6&&diasHasta(g.fecha)<=0).reduce((a,b)=>a+b.monto,0);
+  const comSem=state.ventas.filter(v=>diasHasta(v.fecha)>=-6&&diasHasta(v.fecha)<=0).reduce((a,b)=>a+(b.comision||0),0);
 
   document.getElementById('metrics-resumen').innerHTML=`
     <div class="metric-card"><div class="metric-label">SALDO TOTAL</div><div class="metric-value ${saldoCls(total)}">${fmt(total)}</div></div>
     <div class="metric-card"><div class="metric-label">VENTAS HOY</div><div class="metric-value green">${fmt(hoyV)}</div></div>
     <div class="metric-card"><div class="metric-label">VENTAS SEMANA</div><div class="metric-value green">${fmt(semV)}</div></div>
     <div class="metric-card"><div class="metric-label">BOLETAS PEND.</div><div class="metric-value red">${fmt(bPend)}</div></div>
-    <div class="metric-card"><div class="metric-label">VENCE 7 DÍAS</div><div class="metric-value orange">${fmt(prox7)}</div></div>
-    <div class="metric-card"><div class="metric-label">GASTOS SEMANA</div><div class="metric-value yellow">${fmt(gdSem)}</div></div>
+    <div class="metric-card"><div class="metric-label">VENCE 7 DIAS</div><div class="metric-value orange">${fmt(prox7)}</div></div>
+    <div class="metric-card"><div class="metric-label">COMIS. SEMANA</div><div class="metric-value red">${fmt(comSem)}</div></div>
   `;
 
   const prox=[...state.boletas].filter(b=>!b.pagada).sort((a,b)=>a.vence.localeCompare(b.vence)).slice(0,5);
@@ -569,7 +679,7 @@ function renderResumen() {
       <div style="display:flex;align-items:center;gap:8px">
         <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
         <span class="badge ${cls}">${lbl}</span>
-        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pagué</button>
+        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button>
       </div>
     </div>`;
   }).join(''):'<div class="empty">Sin boletas pendientes</div>';
@@ -577,7 +687,9 @@ function renderResumen() {
   const ultGD=[...state.gastosDiarios].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id).slice(0,5);
   document.getElementById('ultimos-gd').innerHTML=ultGD.length?ultGD.map(g=>`
     <div class="list-row">
-      <div class="main-info"><strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong><span class="sub">${fmtD(g.fecha)}</span></div>
+      <div class="main-info"><strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
+        <span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco':'Efectivo'}</span>
+      </div>
       <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
     </div>`).join(''):'<div class="empty">Sin gastos registrados</div>';
 
@@ -596,27 +708,32 @@ function renderResumen() {
   }).join('');
 }
 
-function renderVentas() {
+function renderVentas(){
   if(!document.getElementById('v-fecha').value) document.getElementById('v-fecha').value=TODAY;
   const total=state.ventas.reduce((a,b)=>a+b.monto,0);
-  const avg=state.ventas.length?Math.round(total/state.ventas.length):0;
+  const totalNeto=state.ventas.reduce((a,b)=>a+(b.monto-(b.comision||0)),0);
+  const totalCom=state.ventas.reduce((a,b)=>a+(b.comision||0),0);
   const mes=state.ventas.filter(v=>v.fecha&&v.fecha.startsWith(TODAY.slice(0,7))).reduce((a,b)=>a+b.monto,0);
   document.getElementById('metrics-ventas').innerHTML=`
-    <div class="metric-card"><div class="metric-label">TOTAL</div><div class="metric-value green">${fmt(total)}</div></div>
-    <div class="metric-card"><div class="metric-label">PROMEDIO DIARIO</div><div class="metric-value">${fmt(avg)}</div></div>
+    <div class="metric-card"><div class="metric-label">VENTAS BRUTAS</div><div class="metric-value green">${fmt(total)}</div></div>
+    <div class="metric-card"><div class="metric-label">COMISIONES TOTAL</div><div class="metric-value red">${fmt(totalCom)}</div></div>
+    <div class="metric-card"><div class="metric-label">NETO TOTAL</div><div class="metric-value green">${fmt(totalNeto)}</div></div>
     <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value green">${fmt(mes)}</div></div>
   `;
-  const cobroIcon = {efectivo:'💵',banco:'🏦',a_liquidar:'💳'};
+  const tipoIcon={none:'💵',qr:'📱',debito:'💳',prepaga:'🏥',credito:'💰'};
   const sorted=[...state.ventas].sort((a,b)=>b.fecha.localeCompare(a.fecha));
   document.getElementById('ventas-list').innerHTML=sorted.length?sorted.map(v=>`
     <div class="list-row">
       <div class="main-info">
-        <strong>${fmtD(v.fecha)} <span style="font-size:12px">${cobroIcon[v.cobro]||'🏦'}</span></strong>
-        <span class="sub">${v.nota||'—'}</span>
+        <strong>${fmtD(v.fecha)} ${tipoIcon[v.tipoCobro]||'💵'} <span style="font-size:11px;color:var(--text3)">${COMISIONES[v.tipoCobro]?.label||'Efectivo'}</span></strong>
+        <span class="sub">${v.nota||'---'} ${v.comision>0?'- comision: '+fmt(v.comision):''}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="amount-col green">${fmt(v.monto)}</span>
-        <button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">✕</button>
+        <div style="text-align:right">
+          <div class="amount-col green">${fmt(v.monto)}</div>
+          ${v.comision>0?`<div style="font-size:11px;color:var(--text3);font-family:var(--mono)">neto ${fmt(v.monto-v.comision)}</div>`:''}
+        </div>
+        <button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">x</button>
       </div>
     </div>`).join(''):'<div class="empty">// sin ventas registradas</div>';
 }
@@ -629,7 +746,7 @@ function filtrarGD(f,el){
   renderGD(f);
 }
 
-function renderGD(filtro) {
+function renderGD(filtro){
   if(!document.getElementById('gd-fecha').value) document.getElementById('gd-fecha').value=TODAY;
   const todos=state.gastosDiarios;
   const sem=todos.filter(g=>diasHasta(g.fecha)>=-6&&diasHasta(g.fecha)<=0);
@@ -648,16 +765,16 @@ function renderGD(filtro) {
     <div class="list-row">
       <div class="main-info">
         <strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
-        <span class="sub">${fmtD(g.fecha)} · ${catInfo[g.cat]?.label||'Otro'}</span>
+        <span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco / MP':'Efectivo'}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
-        <button class="btn-danger-sm" onclick="eliminarGD(${g.id})">✕</button>
+        <button class="btn-danger-sm" onclick="eliminarGD(${g.id})">x</button>
       </div>
-    </div>`).join(''):'<div class="empty">// sin gastos en esta categoría</div>';
+    </div>`).join(''):'<div class="empty">// sin gastos en esta categoria</div>';
 }
 
-function renderBoletas() {
+function renderBoletas(){
   if(!document.getElementById('b-fecha').value) document.getElementById('b-fecha').value=TODAY;
   const pend=[...state.boletas].filter(b=>!b.pagada).sort((a,b)=>a.vence.localeCompare(b.vence));
   const pag=[...state.boletas].filter(b=>b.pagada).sort((a,b)=>b.vence.localeCompare(a.vence));
@@ -666,12 +783,12 @@ function renderBoletas() {
     const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
     const lbl=d<0?`Vencida ${Math.abs(d)}d`:d===0?'Hoy':`${d}d`;
     return `<div class="list-row">
-      <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)} · vence ${fmtD(b.vence)}</span></div>
+      <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)} - vence ${fmtD(b.vence)}</span></div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
         <span class="badge ${cls}">${lbl}</span>
-        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pagué</button>
-        <button class="btn-danger-sm" onclick="eliminarBoleta(${b.id})">✕</button>
+        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button>
+        <button class="btn-danger-sm" onclick="eliminarBoleta(${b.id})">x</button>
       </div>
     </div>`;
   }).join(''):'<div class="empty">// sin boletas pendientes</div>';
@@ -679,10 +796,10 @@ function renderBoletas() {
     <div class="list-row paid">
       <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)}</span></div>
       <span class="amount-col">${fmt(b.monto)}</span>
-    </div>`).join(''):'<div class="empty">// ninguna todavía</div>';
+    </div>`).join(''):'<div class="empty">// ninguna todavia</div>';
 }
 
-function renderFijos() {
+function renderFijos(){
   const total=state.gastosFijos.reduce((a,b)=>a+(b.monto||0),0);
   const neg=state.gastosFijos.filter(g=>g.cat==='negocio').reduce((a,b)=>a+(b.monto||0),0);
   const per=state.gastosFijos.filter(g=>g.cat!=='negocio').reduce((a,b)=>a+(b.monto||0),0);
@@ -694,172 +811,172 @@ function renderFijos() {
   const catM={negocio:'Negocio',personal:'Personal',servicios:'Servicios'};
   document.getElementById('fijos-list').innerHTML=state.gastosFijos.length?state.gastosFijos.map(g=>`
     <div class="list-row">
-      <div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' · día '+g.dia:''}</span></div>
+      <div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' - dia '+g.dia:''}</span></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="amount-col orange">${g.monto?fmt(g.monto):'—'}</span>
-        <button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">✕</button>
+        <span class="amount-col orange">${g.monto?fmt(g.monto):'---'}</span>
+        <button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">x</button>
       </div>
     </div>`).join(''):'<div class="empty">// sin gastos fijos</div>';
 }
 
-// ═══ ACTIONS ═══
+// ══ ACTIONS ══
 
-// Ventas — primero abre modal para elegir forma de cobro
-function iniciarVenta() {
+function iniciarVenta(){
   const fecha=document.getElementById('v-fecha').value;
   const monto=parseFloat(document.getElementById('v-monto').value);
   const nota=document.getElementById('v-nota').value.trim();
-  if(!fecha||isNaN(monto)||monto<=0){toast('Completá fecha y monto','error');return;}
+  if(!fecha||isNaN(monto)||monto<=0){toast('Completa fecha y monto','error');return;}
   ventaPendiente={fecha,monto,nota};
   document.getElementById('modal-cobro').classList.add('open');
 }
 
-async function confirmarVenta(cobro) {
-  if(!ventaPendiente) return;
-  const {fecha,monto,nota}=ventaPendiente;
+async function confirmarVenta(cobro,tipoCobro){
+  if(!ventaPendiente)return;
+  const{fecha,monto,nota}=ventaPendiente;
   ventaPendiente=null;
   cerrarModalCobro();
+  const{totalCom:comision}=calcComision(monto,tipoCobro);
+  const netoRecibido=monto-comision;
   const id=state.nextId++;
-  state[cobro]+=monto;
-  state.ventas.unshift({id,fecha,monto,nota,cobro});
+  state[cobro]+=netoRecibido;
+  state.ventas.unshift({id,fecha,monto,nota,cobro,tipoCobro,comision});
   document.getElementById('v-monto').value='';
   document.getElementById('v-nota').value='';
-  renderAll(); setSyncStatus('loading');
-  try {
+  document.getElementById('comision-preview').className='comision-box';
+  renderAll();setSyncStatus('loading');
+  try{
     await Promise.all([
-      sb.from('ventas').insert({id,fecha,monto,nota,cobro}),
+      sb.from('ventas').insert({id,fecha,monto,nota,cobro,tipo_cobro:tipoCobro,comision}),
       saveEstado(),
     ]);
-    setSyncStatus('ok'); toast('Venta registrada '+fmt(monto));
-  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+    setSyncStatus('ok');
+    toast(tipoCobro==='none'?'Venta registrada '+fmt(monto):'Venta registrada - neto '+fmt(monto-comision));
+  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-async function eliminarVenta(id) {
+async function eliminarVenta(id){
   const v=state.ventas.find(x=>x.id===id);
-  if(!v||!confirm('¿Eliminar esta venta?'))return;
-  state[v.cobro||'banco']-=v.monto;
+  if(!v||!confirm('Eliminar esta venta?'))return;
+  const netoRecibido=v.monto-(v.comision||0);
+  state[v.cobro||'banco']-=netoRecibido;
   state.ventas=state.ventas.filter(x=>x.id!==id);
-  renderAll(); setSyncStatus('loading');
-  try {
-    await Promise.all([sb.from('ventas').delete().eq('id',id), saveEstado()]);
-    setSyncStatus('ok'); toast('Venta eliminada','error');
-  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+  renderAll();setSyncStatus('loading');
+  try{
+    await Promise.all([sb.from('ventas').delete().eq('id',id),saveEstado()]);
+    setSyncStatus('ok');toast('Venta eliminada','error');
+  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-async function agregarGastoDiario() {
+async function agregarGastoDiario(){
   const fecha=document.getElementById('gd-fecha').value;
   const monto=parseFloat(document.getElementById('gd-monto').value);
   const cat=document.getElementById('gd-cat').value;
   const desc=document.getElementById('gd-desc').value.trim();
-  if(!fecha||isNaN(monto)||monto<=0){toast('Completá fecha y monto','error');return;}
+  const pago=document.getElementById('gd-pago').value;
+  if(!fecha||isNaN(monto)||monto<=0){toast('Completa fecha y monto','error');return;}
   const id=state.nextId++;
-  // gastos diarios se descuentan del efectivo por defecto
-  state.efectivo-=monto;
-  state.gastosDiarios.unshift({id,fecha,monto,cat,desc});
+  state[pago]-=monto;
+  state.gastosDiarios.unshift({id,fecha,monto,cat,desc,pago});
   document.getElementById('gd-monto').value='';
   document.getElementById('gd-desc').value='';
-  renderAll(); setSyncStatus('loading');
-  try {
+  renderAll();setSyncStatus('loading');
+  try{
     await Promise.all([
-      sb.from('gastos_diarios').insert({id,fecha,monto,cat,descripcion:desc}),
+      sb.from('gastos_diarios').insert({id,fecha,monto,cat,descripcion:desc,pago}),
       saveEstado(),
     ]);
-    setSyncStatus('ok'); toast('Gasto registrado '+fmt(monto));
-  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+    setSyncStatus('ok');toast('Gasto registrado '+fmt(monto));
+  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-async function eliminarGD(id) {
+async function eliminarGD(id){
   const g=state.gastosDiarios.find(x=>x.id===id);
-  if(!g||!confirm('¿Eliminar este gasto?'))return;
-  state.efectivo+=g.monto;
+  if(!g||!confirm('Eliminar este gasto?'))return;
+  state[g.pago||'efectivo']+=g.monto;
   state.gastosDiarios=state.gastosDiarios.filter(x=>x.id!==id);
-  renderAll(); setSyncStatus('loading');
-  try {
-    await Promise.all([sb.from('gastos_diarios').delete().eq('id',id), saveEstado()]);
-    setSyncStatus('ok'); toast('Gasto eliminado','error');
-  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+  renderAll();setSyncStatus('loading');
+  try{
+    await Promise.all([sb.from('gastos_diarios').delete().eq('id',id),saveEstado()]);
+    setSyncStatus('ok');toast('Gasto eliminado','error');
+  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-async function agregarBoleta() {
+async function agregarBoleta(){
   const prov=document.getElementById('b-prov').value;
   const monto=parseFloat(document.getElementById('b-monto').value);
   const fechaBoleta=document.getElementById('b-fecha').value;
   const dias=parseInt(document.getElementById('b-dias').value);
-  if(!prov||isNaN(monto)||monto<=0||!fechaBoleta){toast('Completá todos los campos','error');return;}
-  const v=new Date(fechaBoleta); v.setDate(v.getDate()+dias);
+  if(!prov||isNaN(monto)||monto<=0||!fechaBoleta){toast('Completa todos los campos','error');return;}
+  const v=new Date(fechaBoleta);v.setDate(v.getDate()+dias);
   const vence=v.toISOString().split('T')[0];
   const id=state.nextId++;
   state.boletas.push({id,prov,monto,fechaBoleta,vence,pagada:false});
   state.boletas.sort((a,b)=>a.vence.localeCompare(b.vence));
   document.getElementById('b-monto').value='';
-  renderAll(); setSyncStatus('loading');
-  try {
+  renderAll();setSyncStatus('loading');
+  try{
     await Promise.all([
       sb.from('boletas').insert({id,prov,monto,fecha_boleta:fechaBoleta,vence,pagada:false}),
       saveEstado(),
     ]);
-    setSyncStatus('ok'); toast('Boleta de '+prov+' agregada');
-  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+    setSyncStatus('ok');toast('Boleta de '+prov+' agregada');
+  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-async function pagarBoleta(id) {
+async function pagarBoleta(id){
   const b=state.boletas.find(x=>x.id===id);
-  if(!b||!confirm(`¿Confirmar pago de ${fmt(b.monto)} a ${b.prov}?`))return;
-  b.pagada=true;
-  // los pagos a proveedores se descuentan del banco por defecto
-  state.banco-=b.monto;
-  renderAll(); setSyncStatus('loading');
-  try {
+  if(!b||!confirm(`Confirmar pago de ${fmt(b.monto)} a ${b.prov}?`))return;
+  b.pagada=true;state.banco-=b.monto;
+  renderAll();setSyncStatus('loading');
+  try{
     await Promise.all([
       sb.from('boletas').update({pagada:true}).eq('id',id),
       saveEstado(),
     ]);
-    setSyncStatus('ok'); toast('Pago registrado a '+b.prov);
-  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+    setSyncStatus('ok');toast('Pago registrado a '+b.prov);
+  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-async function eliminarBoleta(id) {
-  if(!confirm('¿Eliminar esta boleta?'))return;
+async function eliminarBoleta(id){
+  if(!confirm('Eliminar esta boleta?'))return;
   state.boletas=state.boletas.filter(x=>x.id!==id);
-  renderAll(); setSyncStatus('loading');
-  try {
+  renderAll();setSyncStatus('loading');
+  try{
     await sb.from('boletas').delete().eq('id',id);
-    setSyncStatus('ok'); toast('Boleta eliminada','error');
-  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+    setSyncStatus('ok');toast('Boleta eliminada','error');
+  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-async function agregarFijo() {
+async function agregarFijo(){
   const desc=document.getElementById('gf-desc').value.trim();
   const monto=parseFloat(document.getElementById('gf-monto').value);
   const cat=document.getElementById('gf-cat').value;
   const dia=parseInt(document.getElementById('gf-dia').value)||null;
-  if(!desc){toast('Ingresá una descripción','error');return;}
+  if(!desc){toast('Ingresa una descripcion','error');return;}
   const id=state.nextId++;
   state.gastosFijos.push({id,desc,monto:isNaN(monto)?0:monto,cat,dia});
   document.getElementById('gf-desc').value='';
   document.getElementById('gf-monto').value='';
   document.getElementById('gf-dia').value='';
-  renderAll(); setSyncStatus('loading');
-  try {
+  renderAll();setSyncStatus('loading');
+  try{
     await Promise.all([
       sb.from('gastos_fijos').insert({id,descripcion:desc,monto:isNaN(monto)?0:monto,cat,dia}),
       saveEstado(),
     ]);
-    setSyncStatus('ok'); toast('Gasto fijo agregado');
-  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+    setSyncStatus('ok');toast('Gasto fijo agregado');
+  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-async function eliminarFijo(id) {
-  if(!confirm('¿Eliminar este gasto fijo?'))return;
+async function eliminarFijo(id){
+  if(!confirm('Eliminar este gasto fijo?'))return;
   state.gastosFijos=state.gastosFijos.filter(x=>x.id!==id);
-  renderAll(); setSyncStatus('loading');
-  try {
+  renderAll();setSyncStatus('loading');
+  try{
     await sb.from('gastos_fijos').delete().eq('id',id);
-    setSyncStatus('ok'); toast('Gasto eliminado','error');
-  } catch(e){ setSyncStatus('error'); toast('Error al guardar','error'); }
+    setSyncStatus('ok');toast('Gasto eliminado','error');
+  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
-
-loadAll();
 </script>
 </body>
 </html>
