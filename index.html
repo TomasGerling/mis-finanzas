@@ -25,7 +25,7 @@
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;}
 
-  /* PIN */
+  /* PIN SCREEN */
   #pin-screen{position:fixed;inset:0;background:var(--bg);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;}
   #pin-screen.hidden{display:none;}
   .pin-logo{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--accent);letter-spacing:.08em;}
@@ -40,7 +40,7 @@
   .pin-key:active{transform:scale(.93);}
   .pin-error{font-size:12px;font-family:var(--mono);color:var(--red);height:16px;text-align:center;}
 
-  /* APP */
+  /* APP SHELL */
   .app-shell{display:flex;min-height:100vh;}
   .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;overflow:hidden;}
   .sidebar-logo{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--accent);letter-spacing:.05em;padding:0 8px 20px;border-bottom:1px solid var(--border);margin-bottom:12px;}
@@ -141,7 +141,6 @@
   .comision-box.show{display:block;}
   .comision-row{display:flex;justify-content:space-between;margin-bottom:4px;color:var(--text2);}
   .comision-row:last-child{margin-bottom:0;border-top:1px solid var(--border);padding-top:6px;margin-top:6px;}
-  /* dia-row: agrupacion de ventas por dia */
   .dia-header{background:var(--bg3);border-radius:var(--radius-sm);padding:8px 12px;margin:12px 0 4px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-family:var(--mono);}
   .dia-header .dia-fecha{font-weight:500;color:var(--text);}
   .dia-header .dia-stats{color:var(--text3);display:flex;gap:16px;}
@@ -179,7 +178,7 @@
 
 <div class="loading-overlay" id="loading" style="display:none">
   <div class="loading-spinner"></div>
-  <span>Conectando...</span>
+  <span>Conectando con Supabase...</span>
 </div>
 
 <div class="modal-overlay" id="modal-saldo">
@@ -255,7 +254,6 @@
   </aside>
 
   <main class="main">
-
     <div id="screen-resumen" class="screen active">
       <div class="page-title">Resumen</div>
       <div class="page-subtitle">Vista general de tu situacion financiera</div>
@@ -286,10 +284,7 @@
         <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="iniciarVenta()">+ Registrar venta</button>
       </div>
       <div class="metrics" id="metrics-ventas"></div>
-      <div class="card">
-        <div class="card-title">Historial por dia</div>
-        <div id="ventas-list"></div>
-      </div>
+      <div class="card"><div class="card-title">Historial por dia</div><div id="ventas-list"></div></div>
     </div>
 
     <div id="screen-gastos-diarios" class="screen">
@@ -374,54 +369,46 @@
       <div class="metrics" id="metrics-fijos"></div>
       <div class="card"><div class="card-title">Gastos registrados</div><div id="fijos-list"></div></div>
     </div>
-
   </main>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ══ SUPABASE ══
+// ══ SUPABASE CONFIG ══
 const SUPABASE_URL='https://fekhvycxgormbrzzfbyg.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZla2h2eWN4Z29ybWJyenpmYnlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTI5MjYsImV4cCI6MjA4OTYyODkyNn0.rqu6cVsJMMXEtmF9_VGVPugFotzumfBsM65ENagft2A';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-// ══ PIN — hash SHA-256 CORREGIDO ══
-const PIN_HASH='8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf';
-
-async function hashPin(pin){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
+// ══ PIN LOGIC (SENCILLO COMO EN INDEX 3) ══
+const PIN_CORRECTO='8798';
 let pinBuffer='';
-async function pinKey(k){
+
+function pinKey(k){
   const err=document.getElementById('pin-error');
   if(err) err.textContent='';
   if(k==='del'){ pinBuffer=pinBuffer.slice(0,-1); }
   else if(pinBuffer.length<4){ pinBuffer+=k; }
   for(let i=0;i<4;i++){
-    const dot = document.getElementById('pd'+i);
+    const dot=document.getElementById('pd'+i);
     if(dot) dot.className='pin-dot'+(i<pinBuffer.length?' filled':'');
   }
   if(pinBuffer.length===4){
-    // CORRECCIÓN: Usamos await para esperar el cálculo del hash
-    const h=await hashPin(pinBuffer);
-    if(h===PIN_HASH){
+    if(pinBuffer===PIN_CORRECTO){
       document.getElementById('pin-screen').classList.add('hidden');
       document.getElementById('app-shell').style.display='flex';
       document.getElementById('loading').style.display='flex';
       loadAll();
     } else {
       for(let i=0;i<4;i++){
-        const dot = document.getElementById('pd'+i);
+        const dot=document.getElementById('pd'+i);
         if(dot) dot.className='pin-dot error';
       }
       if(err) err.textContent='Codigo incorrecto';
       setTimeout(()=>{
         pinBuffer='';
         for(let i=0;i<4;i++){
-           const dot = document.getElementById('pd'+i);
+           const dot=document.getElementById('pd'+i);
            if(dot) dot.className='pin-dot';
         }
         if(err) err.textContent='';
@@ -431,20 +418,20 @@ async function pinKey(k){
 }
 
 document.addEventListener('keydown',function(e){
-  const screen = document.getElementById('pin-screen');
-  if(screen && screen.classList.contains('hidden'))return;
+  const screen=document.getElementById('pin-screen');
+  if(screen && screen.classList.contains('hidden')) return;
   if(e.key>='0'&&e.key<='9') pinKey(e.key);
   if(e.key==='Backspace') pinKey('del');
 });
 
 // ══ COMISIONES ══
 const COMISIONES={
-  none:       {label:'Efectivo',        rate:0,      bolsillo:'efectivo'},
+  none:         {label:'Efectivo',      rate:0,      bolsillo:'efectivo'},
   transferencia:{label:'Transferencia', rate:0,      bolsillo:'banco'},
-  qr:         {label:'QR (MP)',         rate:0.0080, bolsillo:'banco'},
-  debito:     {label:'Debito',          rate:0.0340, bolsillo:'banco'},
-  prepaga:    {label:'Prepaga',         rate:0.0393, bolsillo:'a_liquidar'},
-  credito:    {label:'Credito',         rate:0.0660, bolsillo:'a_liquidar'},
+  qr:           {label:'QR (MP)',       rate:0.0080, bolsillo:'banco'},
+  debito:       {label:'Debito',        rate:0.0340, bolsillo:'banco'},
+  prepaga:      {label:'Prepaga',       rate:0.0393, bolsillo:'a_liquidar'},
+  credito:      {label:'Credito',       rate:0.0660, bolsillo:'a_liquidar'},
 };
 const IVA=0.21;
 
@@ -468,12 +455,7 @@ function comisionHTML(monto,tipo){
   const{comBruta,ivaC,total,neto}=calcComision(monto,tipo);
   const r=(COMISIONES[tipo].rate*100).toFixed(2);
   if(total===0) return `<div class="comision-row" style="color:var(--green)"><span>Sin comision</span><span>Recibi ${fmt(monto)}</span></div>`;
-  return `
-    <div class="comision-row"><span>Comision (${r}%)</span><span>${fmt(comBruta)}</span></div>
-    <div class="comision-row"><span>IVA sobre comision (21%)</span><span>${fmt(ivaC)}</span></div>
-    <div class="comision-row"><span>Total comision</span><span>${fmt(total)}</span></div>
-    <div class="comision-row"><span>Neto que recibis</span><span style="color:var(--green)">${fmt(neto)}</span></div>
-  `;
+  return `<div class="comision-row"><span>Comision (${r}%)</span><span>${fmt(comBruta)}</span></div><div class="comision-row"><span>IVA sobre comision (21%)</span><span>${fmt(ivaC)}</span></div><div class="comision-row"><span>Total comision</span><span>${fmt(total)}</span></div><div class="comision-row"><span>Neto que recibis</span><span style="color:var(--green)">${fmt(neto)}</span></div>`;
 }
 
 // ══ STATE ══
@@ -515,6 +497,7 @@ function toast(msg,type='success'){
   t.textContent=msg;t.className='toast '+type+' show';
   setTimeout(()=>t.classList.remove('show'),2500);
 }
+
 function setSyncStatus(s){
   const dot=document.getElementById('sync-dot'),txt=document.getElementById('sync-text');
   if(!dot || !txt) return;
@@ -541,12 +524,9 @@ async function confirmarEditSaldo(){
   try{await saveEstado();setSyncStatus('ok');toast('Saldo actualizado');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
-document.getElementById('modal-saldo').addEventListener('click',function(e){if(e.target===this)cerrarModalSaldo();});
-document.getElementById('modal-saldo-input').addEventListener('keydown',function(e){if(e.key==='Enter')confirmarEditSaldo();});
 function cerrarModalCobro(){document.getElementById('modal-cobro').classList.remove('open');ventaPendiente=null;}
-document.getElementById('modal-cobro').addEventListener('click',function(e){if(e.target===this)cerrarModalCobro();});
 
-// ══ LOAD ══
+// ══ DATA LOAD & SAVE ══
 async function loadAll(){
   setSyncStatus('loading');
   try{
@@ -561,11 +541,7 @@ async function loadAll(){
     state.banco=Number(est?.banco??377281);
     state.a_liquidar=Number(est?.a_liquidar??0);
     state.nextId=est?.next_id??2000;
-    state.ventas=(ventas||[]).map(v=>({
-      id:v.id,fecha:v.fecha,monto:Number(v.monto),nota:v.nota||'',
-      cobro:v.cobro||'efectivo',tipoCobro:v.tipo_cobro||'none',
-      comision:Number(v.comision||0),cantidad:Number(v.cantidad||0)
-    }));
+    state.ventas=(ventas||[]).map(v=>({id:v.id,fecha:v.fecha,monto:Number(v.monto),nota:v.nota||'',cobro:v.cobro||'efectivo',tipoCobro:v.tipo_cobro||'none',comision:Number(v.comision||0),cantidad:Number(v.cantidad||0)}));
     state.gastosDiarios=(gd||[]).map(g=>({id:g.id,fecha:g.fecha,monto:Number(g.monto),cat:g.cat,desc:g.descripcion||'',pago:g.pago||'efectivo'}));
     state.boletas=(boletas||[]).map(b=>({id:b.id,prov:b.prov,monto:Number(b.monto),fechaBoleta:b.fecha_boleta,vence:b.vence,pagada:b.pagada}));
     state.gastosFijos=(fijos||[]).map(g=>({id:g.id,desc:g.descripcion||'',monto:Number(g.monto||0),cat:g.cat,dia:g.dia}));
@@ -575,17 +551,13 @@ async function loadAll(){
   }catch(e){
     setSyncStatus('error');
     document.getElementById('loading').style.display='none';
-    toast('Error al conectar','error');
+    toast('Error al conectar con Supabase','error');
     renderAll();
   }
 }
 
 async function saveEstado(){
-  await sb.from('estado').upsert({
-    id:'principal',saldo:saldoTotal(),
-    efectivo:state.efectivo,banco:state.banco,a_liquidar:state.a_liquidar,
-    next_id:state.nextId,updated_at:new Date().toISOString()
-  });
+  await sb.from('estado').upsert({id:'principal',saldo:saldoTotal(),efectivo:state.efectivo,banco:state.banco,a_liquidar:state.a_liquidar,next_id:state.nextId,updated_at:new Date().toISOString()});
 }
 
 function goTo(name,el){
@@ -596,15 +568,13 @@ function goTo(name,el){
   renderAll();
 }
 
-// ══ RENDER ══
+// ══ RENDER FUNCTIONS ══
 function renderAll(){renderSidebar();renderResumen();renderVentas();renderGD(gdFilter);renderBoletas();renderFijos();}
 
 function renderSidebar(){
   const total=saldoTotal();
-  const sa=document.getElementById('sidebar-amount');
-  if(!sa) return;
-  sa.textContent=fmt(total);
-  sa.className='amount '+(total<0?'neg':total<200000?'warn':'pos');
+  document.getElementById('sidebar-amount').textContent=fmt(total);
+  document.getElementById('sidebar-amount').className='amount '+(total<0?'neg':total<200000?'warn':'pos');
   document.getElementById('sb-efectivo').textContent=fmt(state.efectivo);
   document.getElementById('sb-banco').textContent=fmt(state.banco);
   document.getElementById('sb-liquidar').textContent=fmt(state.a_liquidar);
@@ -622,124 +592,52 @@ function renderSidebar(){
 function renderResumen(){
   const total=saldoTotal();
   const alertas=state.boletas.filter(b=>!b.pagada&&diasHasta(b.vence)<=3);
-  const alertasWrap = document.getElementById('alertas-wrap');
-  if(alertasWrap) {
-    alertasWrap.innerHTML=alertas.map(b=>{
-        const d=diasHasta(b.vence);
-        const txt=d<0?`Vencida hace ${Math.abs(d)} dias`:d===0?'Vence hoy':`Vence en ${d} dias`;
-        return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> - ${fmt(b.monto)}</span><span>${txt}</span></div>`;
-    }).join('');
-  }
-
-  const saldoBreakdown = document.getElementById('saldo-breakdown');
-  if(saldoBreakdown) {
-    saldoBreakdown.innerHTML=`
-        <div class="saldo-pocket"><div class="pocket-label">💵 EFECTIVO</div><div class="pocket-value green">${fmt(state.efectivo)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('efectivo')">Editar</button></div>
-        <div class="saldo-pocket"><div class="pocket-label">🏦 BANCO / MP</div><div class="pocket-value blue">${fmt(state.banco)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('banco')">Editar</button></div>
-        <div class="saldo-pocket"><div class="pocket-label">💳 A LIQUIDAR</div><div class="pocket-value purple">${fmt(state.a_liquidar)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('a_liquidar')">Editar</button></div>
-    `;
-  }
-
+  document.getElementById('alertas-wrap').innerHTML=alertas.map(b=>{
+    const d=diasHasta(b.vence);
+    const txt=d<0?`Vencida hace ${Math.abs(d)} dias`:d===0?'Vence hoy':`Vence en ${d} dias`;
+    return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> - ${fmt(b.monto)}</span><span>${txt}</span></div>`;
+  }).join('');
+  document.getElementById('saldo-breakdown').innerHTML=`<div class="saldo-pocket"><div class="pocket-label">💵 EFECTIVO</div><div class="pocket-value green">${fmt(state.efectivo)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('efectivo')">Editar</button></div><div class="saldo-pocket"><div class="pocket-label">🏦 BANCO / MP</div><div class="pocket-value blue">${fmt(state.banco)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('banco')">Editar</button></div><div class="saldo-pocket"><div class="pocket-label">💳 A LIQUIDAR</div><div class="pocket-value purple">${fmt(state.a_liquidar)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('a_liquidar')">Editar</button></div>`;
   const hoyV=state.ventas.filter(v=>v.fecha===TODAY).reduce((a,b)=>a+b.monto,0);
   const semV=state.ventas.filter(v=>diasHasta(v.fecha)>=-6&&diasHasta(v.fecha)<=0).reduce((a,b)=>a+b.monto,0);
   const bPend=state.boletas.filter(b=>!b.pagada).reduce((a,b)=>a+b.monto,0);
   const gdSem=state.gastosDiarios.filter(g=>diasHasta(g.fecha)>=-6&&diasHasta(g.fecha)<=0).reduce((a,b)=>a+b.monto,0);
   const cantHoy=state.ventas.filter(v=>v.fecha===TODAY).reduce((a,b)=>a+(b.cantidad||0),0);
-
-  const metricsResumen = document.getElementById('metrics-resumen');
-  if(metricsResumen) {
-    metricsResumen.innerHTML=`
-        <div class="metric-card"><div class="metric-label">SALDO TOTAL</div><div class="metric-value ${saldoCls(total)}">${fmt(total)}</div></div>
-        <div class="metric-card"><div class="metric-label">VENTAS HOY</div><div class="metric-value green">${fmt(hoyV)}</div></div>
-        <div class="metric-card"><div class="metric-label">VENTAS HOY (CANT.)</div><div class="metric-value blue">${cantHoy}</div></div>
-        <div class="metric-card"><div class="metric-label">VENTAS SEMANA</div><div class="metric-value green">${fmt(semV)}</div></div>
-        <div class="metric-card"><div class="metric-label">BOLETAS PEND.</div><div class="metric-value red">${fmt(bPend)}</div></div>
-        <div class="metric-card"><div class="metric-label">GASTOS SEMANA</div><div class="metric-value yellow">${fmt(gdSem)}</div></div>
-    `;
-  }
-
+  document.getElementById('metrics-resumen').innerHTML=`<div class="metric-card"><div class="metric-label">SALDO TOTAL</div><div class="metric-value ${saldoCls(total)}">${fmt(total)}</div></div><div class="metric-card"><div class="metric-label">VENTAS HOY</div><div class="metric-value green">${fmt(hoyV)}</div></div><div class="metric-card"><div class="metric-label">VENTAS HOY (CANT.)</div><div class="metric-value blue">${cantHoy}</div></div><div class="metric-card"><div class="metric-label">VENTAS SEMANA</div><div class="metric-value green">${fmt(semV)}</div></div><div class="metric-card"><div class="metric-label">BOLETAS PEND.</div><div class="metric-value red">${fmt(bPend)}</div></div><div class="metric-card"><div class="metric-label">GASTOS SEMANA</div><div class="metric-value yellow">${fmt(gdSem)}</div></div>`;
   const prox=[...state.boletas].filter(b=>!b.pagada).sort((a,b)=>a.vence.localeCompare(b.vence)).slice(0,5);
-  const proximosList = document.getElementById('proximos-list');
-  if(proximosList) {
-    proximosList.innerHTML=prox.length?prox.map(b=>{
-        const d=diasHasta(b.vence);
-        const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
-        const lbl=d<0?'Vencida':d===0?'Hoy':`${d}d`;
-        return `<div class="list-row">
-          <div class="main-info"><strong>${b.prov}</strong><span class="sub">vence ${fmtD(b.vence)}</span></div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
-            <span class="badge ${cls}">${lbl}</span>
-            <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button>
-          </div>
-        </div>`;
-    }).join(''):'<div class="empty">Sin boletas pendientes</div>';
-  }
-
+  document.getElementById('proximos-list').innerHTML=prox.length?prox.map(b=>{
+    const d=diasHasta(b.vence);
+    const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
+    const lbl=d<0?'Vencida':d===0?'Hoy':`${d}d`;
+    return `<div class="list-row"><div class="main-info"><strong>${b.prov}</strong><span class="sub">vence ${fmtD(b.vence)}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span><span class="badge ${cls}">${lbl}</span><button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button></div></div>`;
+  }).join(''):'<div class="empty">Sin boletas pendientes</div>';
   const ultGD=[...state.gastosDiarios].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id).slice(0,5);
-  const ultimosGd = document.getElementById('ultimos-gd');
-  if(ultimosGd) {
-    ultimosGd.innerHTML=ultGD.length?ultGD.map(g=>`
-        <div class="list-row">
-          <div class="main-info"><strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
-            <span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco':'Efectivo'}</span>
-          </div>
-          <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
-        </div>`).join(''):'<div class="empty">Sin gastos registrados</div>';
-  }
-
-  // chart
-  const days=[];
-  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);}
+  document.getElementById('ultimos-gd').innerHTML=ultGD.length?ultGD.map(g=>`<div class="list-row"><div class="main-info"><strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong><span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco':'Efectivo'}</span></div><span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span></div>`).join(''):'<div class="empty">Sin gastos registrados</div>';
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);}
   const montos=days.map(f=>state.ventas.filter(v=>v.fecha===f).reduce((a,b)=>a+b.monto,0));
   const maxM=Math.max(...montos,1);
-  const weekChart = document.getElementById('week-chart');
-  if(weekChart) {
-    weekChart.innerHTML=days.map((f,i)=>{
-        const h=Math.round(montos[i]/maxM*60);
-        const dn=new Date(f+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short'}).slice(0,1).toUpperCase();
-        return `<div class="chart-col">
-          <div class="chart-val">${montos[i]>0?'$'+Math.round(montos[i]/1000)+'k':''}</div>
-          <div class="chart-bar" style="height:${h}px;opacity:${f===TODAY?1:0.5}"></div>
-          <div class="chart-day">${dn}</div>
-        </div>`;
-    }).join('');
-  }
+  document.getElementById('week-chart').innerHTML=days.map((f,i)=>{
+    const h=Math.round(montos[i]/maxM*60);
+    const dn=new Date(f+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short'}).slice(0,1).toUpperCase();
+    return `<div class="chart-col"><div class="chart-val">${montos[i]>0?'$'+Math.round(montos[i]/1000)+'k':''}</div><div class="chart-bar" style="height:${h}px;opacity:${f===TODAY?1:0.5}"></div><div class="chart-day">${dn}</div></div>`;
+  }).join('');
 }
 
 function renderVentas(){
-  const vFechaInput = document.getElementById('v-fecha');
-  if(vFechaInput && !vFechaInput.value) vFechaInput.value=TODAY;
-  
+  if(!document.getElementById('v-fecha').value) document.getElementById('v-fecha').value=TODAY;
   const totalMonto=state.ventas.reduce((a,b)=>a+b.monto,0);
   const totalCom=state.ventas.reduce((a,b)=>a+(b.comision||0),0);
   const totalCant=state.ventas.reduce((a,b)=>a+(b.cantidad||0),0);
   const mes=state.ventas.filter(v=>v.fecha&&v.fecha.startsWith(TODAY.slice(0,7))).reduce((a,b)=>a+b.monto,0);
-  
-  const metricsVentas = document.getElementById('metrics-ventas');
-  if(metricsVentas) {
-    metricsVentas.innerHTML=`
-        <div class="metric-card"><div class="metric-label">VENTAS BRUTAS</div><div class="metric-value green">${fmt(totalMonto)}</div></div>
-        <div class="metric-card"><div class="metric-label">TOTAL VENTAS CANT.</div><div class="metric-value blue">${totalCant.toLocaleString('es-AR')}</div></div>
-        <div class="metric-card"><div class="metric-label">COMISIONES</div><div class="metric-value red">${fmt(totalCom)}</div></div>
-        <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value green">${fmt(mes)}</div></div>
-    `;
-  }
-
+  document.getElementById('metrics-ventas').innerHTML=`<div class="metric-card"><div class="metric-label">VENTAS BRUTAS</div><div class="metric-value green">${fmt(totalMonto)}</div></div><div class="metric-card"><div class="metric-label">TOTAL VENTAS CANT.</div><div class="metric-value blue">${totalCant.toLocaleString('es-AR')}</div></div><div class="metric-card"><div class="metric-label">COMISIONES</div><div class="metric-value red">${fmt(totalCom)}</div></div><div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value green">${fmt(mes)}</div></div>`;
   const byDia={};
   for(const v of state.ventas){
     if(!byDia[v.fecha]) byDia[v.fecha]={ventas:[],total:0,comision:0,cantidad:0};
-    byDia[v.fecha].ventas.push(v);
-    byDia[v.fecha].total+=v.monto;
-    byDia[v.fecha].comision+=(v.comision||0);
-    byDia[v.fecha].cantidad+=(v.cantidad||0);
+    byDia[v.fecha].ventas.push(v);byDia[v.fecha].total+=v.monto;byDia[v.fecha].comision+=(v.comision||0);byDia[v.fecha].cantidad+=(v.cantidad||0);
   }
   const diasOrdenados=Object.keys(byDia).sort((a,b)=>b.localeCompare(a));
-
   const list=document.getElementById('ventas-list');
-  if(!list) return;
   if(!diasOrdenados.length){list.innerHTML='<div class="empty">// sin ventas registradas</div>';return;}
-
   list.innerHTML=diasOrdenados.map(fecha=>{
     const dia=byDia[fecha];
     const cantStr=dia.cantidad>0?`${dia.cantidad} ventas`:'';
@@ -748,252 +646,124 @@ function renderVentas(){
       const ic=tipoIcon[v.tipoCobro]||'💵';
       const label=COMISIONES[v.tipoCobro]?.label||'Efectivo';
       const netoStr=v.comision>0?`<div style="font-size:11px;color:var(--text3);font-family:var(--mono)">neto ${fmt(v.monto-v.comision)}</div>`:'';
-      return `<div class="list-row" style="padding-left:12px">
-        <div class="main-info">
-          <strong>${ic} ${label}</strong>
-          <span class="sub">${v.nota&&v.nota!=='Historial importado'?v.nota:v.nota==='Historial importado'?'Importado de planilla':'---'}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="text-align:right"><div class="amount-col green">${fmt(v.monto)}</div>${netoStr}</div>
-          <button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">x</button>
-        </div>
-      </div>`;
+      return `<div class="list-row" style="padding-left:12px"><div class="main-info"><strong>${ic} ${label}</strong><span class="sub">${v.nota&&v.nota!=='Historial importado'?v.nota:v.nota==='Historial importado'?'Importado de planilla':'---'}</span></div><div style="display:flex;align-items:center;gap:8px"><div style="text-align:right"><div class="amount-col green">${fmt(v.monto)}</div>${netoStr}</div><button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">x</button></div></div>`;
     }).join('');
-    return `
-      <div class="dia-header">
-        <span class="dia-fecha">${fmtFecha(fecha)}</span>
-        <span class="dia-stats">
-          ${cantStr?`<span class="dia-count">${cantStr}</span>`:''}
-          <span class="dia-total">${fmt(dia.total)}${comStr}</span>
-        </span>
-      </div>
-      ${filas}
-    `;
+    return `<div class="dia-header"><span class="dia-fecha">${fmtFecha(fecha)}</span><span class="dia-stats">${cantStr?`<span class="dia-count">${cantStr}</span>`:''}<span class="dia-total">${fmt(dia.total)}${comStr}</span></span></div>${filas}`;
   }).join('');
 }
 
 let gdFilter='todo';
 function filtrarGD(f,el){
-  gdFilter=f;
-  document.querySelectorAll('#screen-gastos-diarios .tab').forEach(t=>t.classList.remove('active'));
-  if(el)el.classList.add('active');
-  renderGD(f);
+  gdFilter=f;document.querySelectorAll('#screen-gastos-diarios .tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');renderGD(f);
 }
 
 function renderGD(filtro){
-  const gdFechaInput = document.getElementById('gd-fecha');
-  if(gdFechaInput && !gdFechaInput.value) gdFechaInput.value=TODAY;
-  
+  if(!document.getElementById('gd-fecha').value) document.getElementById('gd-fecha').value=TODAY;
   const todos=state.gastosDiarios;
   const sem=todos.filter(g=>diasHasta(g.fecha)>=-6&&diasHasta(g.fecha)<=0);
   const mes=todos.filter(g=>g.fecha&&g.fecha.startsWith(TODAY.slice(0,7)));
   const hoy=todos.filter(g=>g.fecha===TODAY);
-  
-  const metricsGd = document.getElementById('metrics-gd');
-  if(metricsGd) {
-    metricsGd.innerHTML=`
-        <div class="metric-card"><div class="metric-label">HOY</div><div class="metric-value red">${fmt(hoy.reduce((a,b)=>a+b.monto,0))}</div></div>
-        <div class="metric-card"><div class="metric-label">ESTA SEMANA</div><div class="metric-value orange">${fmt(sem.reduce((a,b)=>a+b.monto,0))}</div></div>
-        <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value yellow">${fmt(mes.reduce((a,b)=>a+b.monto,0))}</div></div>
-    `;
-  }
-
-  let lista=filtro==='todo'?todos:filtro==='otros'
-    ?todos.filter(g=>!['super','carne','verdura'].includes(g.cat))
-    :todos.filter(g=>g.cat===filtro);
+  document.getElementById('metrics-gd').innerHTML=`<div class="metric-card"><div class="metric-label">HOY</div><div class="metric-value red">${fmt(hoy.reduce((a,b)=>a+b.monto,0))}</div></div><div class="metric-card"><div class="metric-label">ESTA SEMANA</div><div class="metric-value orange">${fmt(sem.reduce((a,b)=>a+b.monto,0))}</div></div><div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value yellow">${fmt(mes.reduce((a,b)=>a+b.monto,0))}</div></div>`;
+  let lista=filtro==='todo'?todos:filtro==='otros'?todos.filter(g=>!['super','carne','verdura'].includes(g.cat)):todos.filter(g=>g.cat===filtro);
   lista=[...lista].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id);
-  
-  const gdList = document.getElementById('gd-list');
-  if(gdList) {
-    gdList.innerHTML=lista.length?lista.map(g=>`
-        <div class="list-row">
-          <div class="main-info">
-            <strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
-            <span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco / MP':'Efectivo'}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
-            <button class="btn-danger-sm" onclick="eliminarGD(${g.id})">x</button>
-          </div>
-        </div>`).join(''):'<div class="empty">// sin gastos en esta categoria</div>';
-  }
+  document.getElementById('gd-list').innerHTML=lista.length?lista.map(g=>`<div class="list-row"><div class="main-info"><strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong><span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco / MP':'Efectivo'}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span><button class="btn-danger-sm" onclick="eliminarGD(${g.id})">x</button></div></div>`).join(''):'<div class="empty">// sin gastos en esta categoria</div>';
 }
 
 function renderBoletas(){
-  const bFechaInput = document.getElementById('b-fecha');
-  if(bFechaInput && !bFechaInput.value) bFechaInput.value=TODAY;
-  
+  if(!document.getElementById('b-fecha').value) document.getElementById('b-fecha').value=TODAY;
   const pend=[...state.boletas].filter(b=>!b.pagada).sort((a,b)=>a.vence.localeCompare(b.vence));
   const pag=[...state.boletas].filter(b=>b.pagada).sort((a,b)=>b.vence.localeCompare(a.vence));
-  
-  const boletasPend = document.getElementById('boletas-pend');
-  if(boletasPend) {
-    boletasPend.innerHTML=pend.length?pend.map(b=>{
-        const d=diasHasta(b.vence);
-        const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
-        const lbl=d<0?`Vencida ${Math.abs(d)}d`:d===0?'Hoy':`${d}d`;
-        return `<div class="list-row">
-          <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)} - vence ${fmtD(b.vence)}</span></div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
-            <span class="badge ${cls}">${lbl}</span>
-            <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button>
-            <button class="btn-danger-sm" onclick="eliminarBoleta(${b.id})">x</button>
-          </div>
-        </div>`;
-    }).join(''):'<div class="empty">// sin boletas pendientes</div>';
-  }
-
-  const boletasPag = document.getElementById('boletas-pag');
-  if(boletasPag) {
-    boletasPag.innerHTML=pag.length?pag.map(b=>`
-        <div class="list-row paid">
-          <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)}</span></div>
-          <span class="amount-col">${fmt(b.monto)}</span>
-        </div>`).join(''):'<div class="empty">// ninguna todavia</div>';
-  }
+  document.getElementById('boletas-pend').innerHTML=pend.length?pend.map(b=>{
+    const d=diasHasta(b.vence);
+    const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
+    const lbl=d<0?`Vencida ${Math.abs(d)}d`:d===0?'Hoy':`${d}d`;
+    return `<div class="list-row"><div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)} - vence ${fmtD(b.vence)}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span><span class="badge ${cls}">${lbl}</span><button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button><button class="btn-danger-sm" onclick="eliminarBoleta(${b.id})">x</button></div></div>`;
+  }).join(''):'<div class="empty">// sin boletas pendientes</div>';
+  document.getElementById('boletas-pag').innerHTML=pag.length?pag.map(b=>`<div class="list-row paid"><div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)}</span></div><span class="amount-col">${fmt(b.monto)}</span></div>`).join(''):'<div class="empty">// ninguna todavia</div>';
 }
 
 function renderFijos(){
   const total=state.gastosFijos.reduce((a,b)=>a+(b.monto||0),0);
   const neg=state.gastosFijos.filter(g=>g.cat==='negocio').reduce((a,b)=>a+(b.monto||0),0);
   const per=state.gastosFijos.filter(g=>g.cat!=='negocio').reduce((a,b)=>a+(b.monto||0),0);
-  
-  const metricsFijos = document.getElementById('metrics-fijos');
-  if(metricsFijos) {
-    metricsFijos.innerHTML=`
-        <div class="metric-card"><div class="metric-label">TOTAL MENSUAL</div><div class="metric-value orange">${fmt(total)}</div></div>
-        <div class="metric-card"><div class="metric-label">NEGOCIO</div><div class="metric-value">${fmt(neg)}</div></div>
-        <div class="metric-card"><div class="metric-label">PERSONAL</div><div class="metric-value">${fmt(per)}</div></div>
-    `;
-  }
-
+  document.getElementById('metrics-fijos').innerHTML=`<div class="metric-card"><div class="metric-label">TOTAL MENSUAL</div><div class="metric-value orange">${fmt(total)}</div></div><div class="metric-card"><div class="metric-label">NEGOCIO</div><div class="metric-value">${fmt(neg)}</div></div><div class="metric-card"><div class="metric-label">PERSONAL</div><div class="metric-value">${fmt(per)}</div></div>`;
   const catM={negocio:'Negocio',personal:'Personal',servicios:'Servicios'};
-  const fijosList = document.getElementById('fijos-list');
-  if(fijosList) {
-    fijosList.innerHTML=state.gastosFijos.length?state.gastosFijos.map(g=>`
-        <div class="list-row">
-          <div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' - dia '+g.dia:''}</span></div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="amount-col orange">${g.monto?fmt(g.monto):'---'}</span>
-            <button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">x</button>
-          </div>
-        </div>`).join(''):'<div class="empty">// sin gastos fijos</div>';
-  }
+  document.getElementById('fijos-list').innerHTML=state.gastosFijos.length?state.gastosFijos.map(g=>`<div class="list-row"><div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' - dia '+g.dia:''}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="amount-col orange">${g.monto?fmt(g.monto):'---'}</span><button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">x</button></div></div>`).join(''):'<div class="empty">// sin gastos fijos</div>';
 }
 
 // ══ ACTIONS ══
 function iniciarVenta(){
-  const fecha=document.getElementById('v-fecha').value;
-  const monto=parseFloat(document.getElementById('v-monto').value);
-  const nota=document.getElementById('v-nota').value.trim();
-  const cantidad=parseInt(document.getElementById('v-cantidad').value)||0;
+  const fecha=document.getElementById('v-fecha').value, monto=parseFloat(document.getElementById('v-monto').value), nota=document.getElementById('v-nota').value.trim(), cantidad=parseInt(document.getElementById('v-cantidad').value)||0;
   if(!fecha||isNaN(monto)||monto<=0){toast('Completa fecha y monto','error');return;}
-  ventaPendiente={fecha,monto,nota,cantidad};
-  document.getElementById('modal-cobro').classList.add('open');
+  ventaPendiente={fecha,monto,nota,cantidad};document.getElementById('modal-cobro').classList.add('open');
 }
 
 async function confirmarVenta(cobro,tipoCobro){
   if(!ventaPendiente)return;
-  const{fecha,monto,nota,cantidad}=ventaPendiente;
-  ventaPendiente=null;cerrarModalCobro();
+  const{fecha,monto,nota,cantidad}=ventaPendiente;ventaPendiente=null;cerrarModalCobro();
   const{total:comision,neto}=calcComision(monto,tipoCobro);
-  const id=state.nextId++;
-  state[cobro]+=neto;
-  state.ventas.unshift({id,fecha,monto,nota,cobro,tipoCobro,comision,cantidad});
-  document.getElementById('v-monto').value='';
-  document.getElementById('v-nota').value='';
-  document.getElementById('v-cantidad').value='';
-  document.getElementById('comision-preview').className='comision-box';
+  const id=state.nextId++;state[cobro]+=neto;state.ventas.unshift({id,fecha,monto,nota,cobro,tipoCobro,comision,cantidad});
+  document.getElementById('v-monto').value='';document.getElementById('v-nota').value='';document.getElementById('v-cantidad').value='';document.getElementById('comision-preview').className='comision-box';
   renderAll();setSyncStatus('loading');
-  try{
-    await Promise.all([
-      sb.from('ventas').insert({id,fecha,monto,nota,cobro,tipo_cobro:tipoCobro,comision,cantidad}),
-      saveEstado(),
-    ]);
-    setSyncStatus('ok');
-    toast(comision>0?'Venta registrada - neto '+fmt(monto-comision):'Venta registrada '+fmt(monto));
-  }catch(e){setSyncStatus('error');toast('Error al guardar','error');}
+  try{await Promise.all([sb.from('ventas').insert({id,fecha,monto,nota,cobro,tipo_cobro:tipoCobro,comision,cantidad}),saveEstado()]);setSyncStatus('ok');toast('Venta registrada');}
+  catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
 async function eliminarVenta(id){
-  const v=state.ventas.find(x=>x.id===id);
-  if(!v||!confirm('Eliminar esta venta?'))return;
-  state[v.cobro||'efectivo']-=(v.monto-(v.comision||0));
-  state.ventas=state.ventas.filter(x=>x.id!==id);
+  const v=state.ventas.find(x=>x.id===id);if(!v||!confirm('Eliminar esta venta?'))return;
+  state[v.cobro||'efectivo']-=(v.monto-(v.comision||0));state.ventas=state.ventas.filter(x=>x.id!==id);
   renderAll();setSyncStatus('loading');
   try{await Promise.all([sb.from('ventas').delete().eq('id',id),saveEstado()]);setSyncStatus('ok');toast('Eliminada','error');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
 async function agregarGastoDiario(){
-  const fecha=document.getElementById('gd-fecha').value;
-  const monto=parseFloat(document.getElementById('gd-monto').value);
-  const cat=document.getElementById('gd-cat').value;
-  const desc=document.getElementById('gd-desc').value.trim();
-  const pago=document.getElementById('gd-pago').value;
+  const fecha=document.getElementById('gd-fecha').value, monto=parseFloat(document.getElementById('gd-monto').value), cat=document.getElementById('gd-cat').value, desc=document.getElementById('gd-desc').value.trim(), pago=document.getElementById('gd-pago').value;
   if(!fecha||isNaN(monto)||monto<=0){toast('Completa fecha y monto','error');return;}
-  const id=state.nextId++;
-  state[pago]-=monto;
-  state.gastosDiarios.unshift({id,fecha,monto,cat,desc,pago});
+  const id=state.nextId++;state[pago]-=monto;state.gastosDiarios.unshift({id,fecha,monto,cat,desc,pago});
   document.getElementById('gd-monto').value='';document.getElementById('gd-desc').value='';
   renderAll();setSyncStatus('loading');
-  try{await Promise.all([sb.from('gastos_diarios').insert({id,fecha,monto,cat,descripcion:desc,pago}),saveEstado()]);setSyncStatus('ok');toast('Gasto registrado '+fmt(monto));}
+  try{await Promise.all([sb.from('gastos_diarios').insert({id,fecha,monto,cat,descripcion:desc,pago}),saveEstado()]);setSyncStatus('ok');toast('Gasto registrado');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
 async function eliminarGD(id){
-  const g=state.gastosDiarios.find(x=>x.id===id);
-  if(!g||!confirm('Eliminar este gasto?'))return;
-  state[g.pago||'efectivo']+=g.monto;
-  state.gastosDiarios=state.gastosDiarios.filter(x=>x.id!==id);
+  const g=state.gastosDiarios.find(x=>x.id===id);if(!g||!confirm('Eliminar este gasto?'))return;
+  state[g.pago||'efectivo']+=g.monto;state.gastosDiarios=state.gastosDiarios.filter(x=>x.id!==id);
   renderAll();setSyncStatus('loading');
   try{await Promise.all([sb.from('gastos_diarios').delete().eq('id',id),saveEstado()]);setSyncStatus('ok');toast('Eliminado','error');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
 async function agregarBoleta(){
-  const prov=document.getElementById('b-prov').value;
-  const monto=parseFloat(document.getElementById('b-monto').value);
-  const fechaBoleta=document.getElementById('b-fecha').value;
-  const dias=parseInt(document.getElementById('b-dias').value);
+  const prov=document.getElementById('b-prov').value, monto=parseFloat(document.getElementById('b-monto').value), fechaBoleta=document.getElementById('b-fecha').value, dias=parseInt(document.getElementById('b-dias').value);
   if(!prov||isNaN(monto)||monto<=0||!fechaBoleta){toast('Completa todos los campos','error');return;}
-  const v=new Date(fechaBoleta);v.setDate(v.getDate()+dias);
-  const vence=v.toISOString().split('T')[0];
-  const id=state.nextId++;
-  state.boletas.push({id,prov,monto,fechaBoleta,vence,pagada:false});
-  state.boletas.sort((a,b)=>a.vence.localeCompare(b.vence));
-  document.getElementById('b-monto').value='';
-  renderAll();setSyncStatus('loading');
-  try{await Promise.all([sb.from('boletas').insert({id,prov,monto,fecha_boleta:fechaBoleta,vence,pagada:false}),saveEstado()]);setSyncStatus('ok');toast('Boleta de '+prov+' agregada');}
+  const v=new Date(fechaBoleta);v.setDate(v.getDate()+dias);const vence=v.toISOString().split('T')[0], id=state.nextId++;
+  state.boletas.push({id,prov,monto,fechaBoleta,vence,pagada:false});state.boletas.sort((a,b)=>a.vence.localeCompare(b.vence));
+  document.getElementById('b-monto').value='';renderAll();setSyncStatus('loading');
+  try{await Promise.all([sb.from('boletas').insert({id,prov,monto,fecha_boleta:fechaBoleta,vence,pagada:false}),saveEstado()]);setSyncStatus('ok');toast('Boleta agregada');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
 async function pagarBoleta(id){
-  const b=state.boletas.find(x=>x.id===id);
-  if(!b||!confirm(`Confirmar pago de ${fmt(b.monto)} a ${b.prov}?`))return;
-  b.pagada=true;state.banco-=b.monto;
-  renderAll();setSyncStatus('loading');
-  try{await Promise.all([sb.from('boletas').update({pagada:true}).eq('id',id),saveEstado()]);setSyncStatus('ok');toast('Pago registrado a '+b.prov);}
+  const b=state.boletas.find(x=>x.id===id);if(!b||!confirm(`Confirmar pago a ${b.prov}?`))return;
+  b.pagada=true;state.banco-=b.monto;renderAll();setSyncStatus('loading');
+  try{await Promise.all([sb.from('boletas').update({pagada:true}).eq('id',id),saveEstado()]);setSyncStatus('ok');toast('Pago registrado');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
 async function eliminarBoleta(id){
   if(!confirm('Eliminar esta boleta?'))return;
-  state.boletas=state.boletas.filter(x=>x.id!==id);
-  renderAll();setSyncStatus('loading');
+  state.boletas=state.boletas.filter(x=>x.id!==id);renderAll();setSyncStatus('loading');
   try{await sb.from('boletas').delete().eq('id',id);setSyncStatus('ok');toast('Eliminada','error');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
 async function agregarFijo(){
-  const desc=document.getElementById('gf-desc').value.trim();
-  const monto=parseFloat(document.getElementById('gf-monto').value);
-  const cat=document.getElementById('gf-cat').value;
-  const dia=parseInt(document.getElementById('gf-dia').value)||null;
+  const desc=document.getElementById('gf-desc').value.trim(), monto=parseFloat(document.getElementById('gf-monto').value), cat=document.getElementById('gf-cat').value, dia=parseInt(document.getElementById('gf-dia').value)||null;
   if(!desc){toast('Ingresa una descripcion','error');return;}
-  const id=state.nextId++;
-  state.gastosFijos.push({id,desc,monto:isNaN(monto)?0:monto,cat,dia});
+  const id=state.nextId++;state.gastosFijos.push({id,desc,monto:isNaN(monto)?0:monto,cat,dia});
   document.getElementById('gf-desc').value='';document.getElementById('gf-monto').value='';document.getElementById('gf-dia').value='';
   renderAll();setSyncStatus('loading');
   try{await Promise.all([sb.from('gastos_fijos').insert({id,descripcion:desc,monto:isNaN(monto)?0:monto,cat,dia}),saveEstado()]);setSyncStatus('ok');toast('Gasto fijo agregado');}
@@ -1002,8 +772,7 @@ async function agregarFijo(){
 
 async function eliminarFijo(id){
   if(!confirm('Eliminar este gasto fijo?'))return;
-  state.gastosFijos=state.gastosFijos.filter(x=>x.id!==id);
-  renderAll();setSyncStatus('loading');
+  state.gastosFijos=state.gastosFijos.filter(x=>x.id!==id);renderAll();setSyncStatus('loading');
   try{await sb.from('gastos_fijos').delete().eq('id',id);setSyncStatus('ok');toast('Eliminado','error');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
