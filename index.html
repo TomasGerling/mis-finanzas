@@ -153,7 +153,6 @@
 </head>
 <body>
 
-<!-- PIN -->
 <div id="pin-screen">
   <div class="pin-logo">MIS FINANZAS</div>
   <div class="pin-title">Ingresa tu codigo de acceso</div>
@@ -178,13 +177,11 @@
   </div>
 </div>
 
-<!-- LOADING -->
 <div class="loading-overlay" id="loading" style="display:none">
   <div class="loading-spinner"></div>
   <span>Conectando...</span>
 </div>
 
-<!-- MODAL SALDO -->
 <div class="modal-overlay" id="modal-saldo">
   <div class="modal">
     <div class="modal-title">Editar saldo</div>
@@ -197,7 +194,6 @@
   </div>
 </div>
 
-<!-- MODAL COBRO -->
 <div class="modal-overlay" id="modal-cobro">
   <div class="modal">
     <div class="modal-title">Como cobraste?</div>
@@ -232,7 +228,6 @@
   </div>
 </div>
 
-<!-- APP -->
 <div class="app-shell" id="app-shell" style="display:none">
   <aside class="sidebar">
     <div class="sidebar-logo">MIS FINANZAS<span>negocio - personal</span></div>
@@ -261,7 +256,6 @@
 
   <main class="main">
 
-    <!-- RESUMEN -->
     <div id="screen-resumen" class="screen active">
       <div class="page-title">Resumen</div>
       <div class="page-subtitle">Vista general de tu situacion financiera</div>
@@ -275,7 +269,6 @@
       <div class="card"><div class="card-title">Ventas - ultimos 7 dias</div><div class="mini-chart" id="week-chart"></div></div>
     </div>
 
-    <!-- VENTAS -->
     <div id="screen-ventas" class="screen">
       <div class="page-title">Ventas</div>
       <div class="page-subtitle">Registra el monto vendido cada dia</div>
@@ -299,7 +292,6 @@
       </div>
     </div>
 
-    <!-- GASTOS DIARIOS -->
     <div id="screen-gastos-diarios" class="screen">
       <div class="page-title">Gastos del dia</div>
       <div class="page-subtitle">Supermercado, carniceria, verduleria y cualquier gasto cotidiano</div>
@@ -339,7 +331,6 @@
       </div>
     </div>
 
-    <!-- BOLETAS -->
     <div id="screen-boletas" class="screen">
       <div class="page-title">Boletas de proveedores</div>
       <div class="page-subtitle">Controla vencimientos y pagos</div>
@@ -363,7 +354,6 @@
       <div class="card"><div class="card-title">Pagadas</div><div id="boletas-pag"></div></div>
     </div>
 
-    <!-- GASTOS FIJOS -->
     <div id="screen-fijos" class="screen">
       <div class="page-title">Gastos fijos</div>
       <div class="page-subtitle">Alquileres, servicios y pagos mensuales</div>
@@ -396,8 +386,7 @@ const SUPABASE_URL='https://fekhvycxgormbrzzfbyg.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZla2h2eWN4Z29ybWJyenpmYnlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTI5MjYsImV4cCI6MjA4OTYyODkyNn0.rqu6cVsJMMXEtmF9_VGVPugFotzumfBsM65ENagft2A';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-// ══ PIN — hash SHA-256, nunca el PIN en texto plano ══
-// Hash del PIN 8798 pre-calculado con SHA-256
+// ══ PIN — hash SHA-256 CORREGIDO ══
 const PIN_HASH='8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf';
 
 async function hashPin(pin){
@@ -408,13 +397,15 @@ async function hashPin(pin){
 let pinBuffer='';
 async function pinKey(k){
   const err=document.getElementById('pin-error');
-  err.textContent='';
+  if(err) err.textContent='';
   if(k==='del'){ pinBuffer=pinBuffer.slice(0,-1); }
   else if(pinBuffer.length<4){ pinBuffer+=k; }
   for(let i=0;i<4;i++){
-    document.getElementById('pd'+i).className='pin-dot'+(i<pinBuffer.length?' filled':'');
+    const dot = document.getElementById('pd'+i);
+    if(dot) dot.className='pin-dot'+(i<pinBuffer.length?' filled':'');
   }
   if(pinBuffer.length===4){
+    // CORRECCIÓN: Usamos await para esperar el cálculo del hash
     const h=await hashPin(pinBuffer);
     if(h===PIN_HASH){
       document.getElementById('pin-screen').classList.add('hidden');
@@ -422,19 +413,26 @@ async function pinKey(k){
       document.getElementById('loading').style.display='flex';
       loadAll();
     } else {
-      for(let i=0;i<4;i++) document.getElementById('pd'+i).className='pin-dot error';
-      err.textContent='Codigo incorrecto';
+      for(let i=0;i<4;i++){
+        const dot = document.getElementById('pd'+i);
+        if(dot) dot.className='pin-dot error';
+      }
+      if(err) err.textContent='Codigo incorrecto';
       setTimeout(()=>{
         pinBuffer='';
-        for(let i=0;i<4;i++) document.getElementById('pd'+i).className='pin-dot';
-        err.textContent='';
+        for(let i=0;i<4;i++){
+           const dot = document.getElementById('pd'+i);
+           if(dot) dot.className='pin-dot';
+        }
+        if(err) err.textContent='';
       },1200);
     }
   }
 }
 
 document.addEventListener('keydown',function(e){
-  if(document.getElementById('pin-screen').classList.contains('hidden'))return;
+  const screen = document.getElementById('pin-screen');
+  if(screen && screen.classList.contains('hidden'))return;
   if(e.key>='0'&&e.key<='9') pinKey(e.key);
   if(e.key==='Backspace') pinKey('del');
 });
@@ -513,11 +511,13 @@ const tipoIcon={none:'💵',transferencia:'📲',qr:'📱',debito:'💳',prepaga
 
 function toast(msg,type='success'){
   const t=document.getElementById('toast');
+  if(!t) return;
   t.textContent=msg;t.className='toast '+type+' show';
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 function setSyncStatus(s){
   const dot=document.getElementById('sync-dot'),txt=document.getElementById('sync-text');
+  if(!dot || !txt) return;
   if(s==='ok'){dot.className='sync-dot';txt.textContent='sincronizado';}
   else if(s==='loading'){dot.className='sync-dot loading';txt.textContent='guardando...';}
   else{dot.className='sync-dot off';txt.textContent='sin conexion';}
@@ -602,6 +602,7 @@ function renderAll(){renderSidebar();renderResumen();renderVentas();renderGD(gdF
 function renderSidebar(){
   const total=saldoTotal();
   const sa=document.getElementById('sidebar-amount');
+  if(!sa) return;
   sa.textContent=fmt(total);
   sa.className='amount '+(total<0?'neg':total<200000?'warn':'pos');
   document.getElementById('sb-efectivo').textContent=fmt(state.efectivo);
@@ -621,88 +622,110 @@ function renderSidebar(){
 function renderResumen(){
   const total=saldoTotal();
   const alertas=state.boletas.filter(b=>!b.pagada&&diasHasta(b.vence)<=3);
-  document.getElementById('alertas-wrap').innerHTML=alertas.map(b=>{
-    const d=diasHasta(b.vence);
-    const txt=d<0?`Vencida hace ${Math.abs(d)} dias`:d===0?'Vence hoy':`Vence en ${d} dias`;
-    return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> - ${fmt(b.monto)}</span><span>${txt}</span></div>`;
-  }).join('');
+  const alertasWrap = document.getElementById('alertas-wrap');
+  if(alertasWrap) {
+    alertasWrap.innerHTML=alertas.map(b=>{
+        const d=diasHasta(b.vence);
+        const txt=d<0?`Vencida hace ${Math.abs(d)} dias`:d===0?'Vence hoy':`Vence en ${d} dias`;
+        return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> - ${fmt(b.monto)}</span><span>${txt}</span></div>`;
+    }).join('');
+  }
 
-  document.getElementById('saldo-breakdown').innerHTML=`
-    <div class="saldo-pocket"><div class="pocket-label">💵 EFECTIVO</div><div class="pocket-value green">${fmt(state.efectivo)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('efectivo')">Editar</button></div>
-    <div class="saldo-pocket"><div class="pocket-label">🏦 BANCO / MP</div><div class="pocket-value blue">${fmt(state.banco)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('banco')">Editar</button></div>
-    <div class="saldo-pocket"><div class="pocket-label">💳 A LIQUIDAR</div><div class="pocket-value purple">${fmt(state.a_liquidar)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('a_liquidar')">Editar</button></div>
-  `;
+  const saldoBreakdown = document.getElementById('saldo-breakdown');
+  if(saldoBreakdown) {
+    saldoBreakdown.innerHTML=`
+        <div class="saldo-pocket"><div class="pocket-label">💵 EFECTIVO</div><div class="pocket-value green">${fmt(state.efectivo)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('efectivo')">Editar</button></div>
+        <div class="saldo-pocket"><div class="pocket-label">🏦 BANCO / MP</div><div class="pocket-value blue">${fmt(state.banco)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('banco')">Editar</button></div>
+        <div class="saldo-pocket"><div class="pocket-label">💳 A LIQUIDAR</div><div class="pocket-value purple">${fmt(state.a_liquidar)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('a_liquidar')">Editar</button></div>
+    `;
+  }
 
   const hoyV=state.ventas.filter(v=>v.fecha===TODAY).reduce((a,b)=>a+b.monto,0);
   const semV=state.ventas.filter(v=>diasHasta(v.fecha)>=-6&&diasHasta(v.fecha)<=0).reduce((a,b)=>a+b.monto,0);
   const bPend=state.boletas.filter(b=>!b.pagada).reduce((a,b)=>a+b.monto,0);
-  const prox7=state.boletas.filter(b=>!b.pagada&&diasHasta(b.vence)<=7&&diasHasta(b.vence)>=0).reduce((a,b)=>a+b.monto,0);
   const gdSem=state.gastosDiarios.filter(g=>diasHasta(g.fecha)>=-6&&diasHasta(g.fecha)<=0).reduce((a,b)=>a+b.monto,0);
   const cantHoy=state.ventas.filter(v=>v.fecha===TODAY).reduce((a,b)=>a+(b.cantidad||0),0);
 
-  document.getElementById('metrics-resumen').innerHTML=`
-    <div class="metric-card"><div class="metric-label">SALDO TOTAL</div><div class="metric-value ${saldoCls(total)}">${fmt(total)}</div></div>
-    <div class="metric-card"><div class="metric-label">VENTAS HOY</div><div class="metric-value green">${fmt(hoyV)}</div></div>
-    <div class="metric-card"><div class="metric-label">VENTAS HOY (CANT.)</div><div class="metric-value blue">${cantHoy}</div></div>
-    <div class="metric-card"><div class="metric-label">VENTAS SEMANA</div><div class="metric-value green">${fmt(semV)}</div></div>
-    <div class="metric-card"><div class="metric-label">BOLETAS PEND.</div><div class="metric-value red">${fmt(bPend)}</div></div>
-    <div class="metric-card"><div class="metric-label">GASTOS SEMANA</div><div class="metric-value yellow">${fmt(gdSem)}</div></div>
-  `;
+  const metricsResumen = document.getElementById('metrics-resumen');
+  if(metricsResumen) {
+    metricsResumen.innerHTML=`
+        <div class="metric-card"><div class="metric-label">SALDO TOTAL</div><div class="metric-value ${saldoCls(total)}">${fmt(total)}</div></div>
+        <div class="metric-card"><div class="metric-label">VENTAS HOY</div><div class="metric-value green">${fmt(hoyV)}</div></div>
+        <div class="metric-card"><div class="metric-label">VENTAS HOY (CANT.)</div><div class="metric-value blue">${cantHoy}</div></div>
+        <div class="metric-card"><div class="metric-label">VENTAS SEMANA</div><div class="metric-value green">${fmt(semV)}</div></div>
+        <div class="metric-card"><div class="metric-label">BOLETAS PEND.</div><div class="metric-value red">${fmt(bPend)}</div></div>
+        <div class="metric-card"><div class="metric-label">GASTOS SEMANA</div><div class="metric-value yellow">${fmt(gdSem)}</div></div>
+    `;
+  }
 
   const prox=[...state.boletas].filter(b=>!b.pagada).sort((a,b)=>a.vence.localeCompare(b.vence)).slice(0,5);
-  document.getElementById('proximos-list').innerHTML=prox.length?prox.map(b=>{
-    const d=diasHasta(b.vence);
-    const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
-    const lbl=d<0?'Vencida':d===0?'Hoy':`${d}d`;
-    return `<div class="list-row">
-      <div class="main-info"><strong>${b.prov}</strong><span class="sub">vence ${fmtD(b.vence)}</span></div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
-        <span class="badge ${cls}">${lbl}</span>
-        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button>
-      </div>
-    </div>`;
-  }).join(''):'<div class="empty">Sin boletas pendientes</div>';
+  const proximosList = document.getElementById('proximos-list');
+  if(proximosList) {
+    proximosList.innerHTML=prox.length?prox.map(b=>{
+        const d=diasHasta(b.vence);
+        const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
+        const lbl=d<0?'Vencida':d===0?'Hoy':`${d}d`;
+        return `<div class="list-row">
+          <div class="main-info"><strong>${b.prov}</strong><span class="sub">vence ${fmtD(b.vence)}</span></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
+            <span class="badge ${cls}">${lbl}</span>
+            <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button>
+          </div>
+        </div>`;
+    }).join(''):'<div class="empty">Sin boletas pendientes</div>';
+  }
 
   const ultGD=[...state.gastosDiarios].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id).slice(0,5);
-  document.getElementById('ultimos-gd').innerHTML=ultGD.length?ultGD.map(g=>`
-    <div class="list-row">
-      <div class="main-info"><strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
-        <span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco':'Efectivo'}</span>
-      </div>
-      <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
-    </div>`).join(''):'<div class="empty">Sin gastos registrados</div>';
+  const ultimosGd = document.getElementById('ultimos-gd');
+  if(ultimosGd) {
+    ultimosGd.innerHTML=ultGD.length?ultGD.map(g=>`
+        <div class="list-row">
+          <div class="main-info"><strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
+            <span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco':'Efectivo'}</span>
+          </div>
+          <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
+        </div>`).join(''):'<div class="empty">Sin gastos registrados</div>';
+  }
 
   // chart
   const days=[];
   for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);}
   const montos=days.map(f=>state.ventas.filter(v=>v.fecha===f).reduce((a,b)=>a+b.monto,0));
   const maxM=Math.max(...montos,1);
-  document.getElementById('week-chart').innerHTML=days.map((f,i)=>{
-    const h=Math.round(montos[i]/maxM*60);
-    const dn=new Date(f+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short'}).slice(0,1).toUpperCase();
-    return `<div class="chart-col">
-      <div class="chart-val">${montos[i]>0?'$'+Math.round(montos[i]/1000)+'k':''}</div>
-      <div class="chart-bar" style="height:${h}px;opacity:${f===TODAY?1:0.5}"></div>
-      <div class="chart-day">${dn}</div>
-    </div>`;
-  }).join('');
+  const weekChart = document.getElementById('week-chart');
+  if(weekChart) {
+    weekChart.innerHTML=days.map((f,i)=>{
+        const h=Math.round(montos[i]/maxM*60);
+        const dn=new Date(f+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short'}).slice(0,1).toUpperCase();
+        return `<div class="chart-col">
+          <div class="chart-val">${montos[i]>0?'$'+Math.round(montos[i]/1000)+'k':''}</div>
+          <div class="chart-bar" style="height:${h}px;opacity:${f===TODAY?1:0.5}"></div>
+          <div class="chart-day">${dn}</div>
+        </div>`;
+    }).join('');
+  }
 }
 
 function renderVentas(){
-  if(!document.getElementById('v-fecha').value) document.getElementById('v-fecha').value=TODAY;
+  const vFechaInput = document.getElementById('v-fecha');
+  if(vFechaInput && !vFechaInput.value) vFechaInput.value=TODAY;
+  
   const totalMonto=state.ventas.reduce((a,b)=>a+b.monto,0);
   const totalCom=state.ventas.reduce((a,b)=>a+(b.comision||0),0);
   const totalCant=state.ventas.reduce((a,b)=>a+(b.cantidad||0),0);
   const mes=state.ventas.filter(v=>v.fecha&&v.fecha.startsWith(TODAY.slice(0,7))).reduce((a,b)=>a+b.monto,0);
-  document.getElementById('metrics-ventas').innerHTML=`
-    <div class="metric-card"><div class="metric-label">VENTAS BRUTAS</div><div class="metric-value green">${fmt(totalMonto)}</div></div>
-    <div class="metric-card"><div class="metric-label">TOTAL VENTAS CANT.</div><div class="metric-value blue">${totalCant.toLocaleString('es-AR')}</div></div>
-    <div class="metric-card"><div class="metric-label">COMISIONES</div><div class="metric-value red">${fmt(totalCom)}</div></div>
-    <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value green">${fmt(mes)}</div></div>
-  `;
+  
+  const metricsVentas = document.getElementById('metrics-ventas');
+  if(metricsVentas) {
+    metricsVentas.innerHTML=`
+        <div class="metric-card"><div class="metric-label">VENTAS BRUTAS</div><div class="metric-value green">${fmt(totalMonto)}</div></div>
+        <div class="metric-card"><div class="metric-label">TOTAL VENTAS CANT.</div><div class="metric-value blue">${totalCant.toLocaleString('es-AR')}</div></div>
+        <div class="metric-card"><div class="metric-label">COMISIONES</div><div class="metric-value red">${fmt(totalCom)}</div></div>
+        <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value green">${fmt(mes)}</div></div>
+    `;
+  }
 
-  // Agrupar ventas por dia
   const byDia={};
   for(const v of state.ventas){
     if(!byDia[v.fecha]) byDia[v.fecha]={ventas:[],total:0,comision:0,cantidad:0};
@@ -714,6 +737,7 @@ function renderVentas(){
   const diasOrdenados=Object.keys(byDia).sort((a,b)=>b.localeCompare(a));
 
   const list=document.getElementById('ventas-list');
+  if(!list) return;
   if(!diasOrdenados.length){list.innerHTML='<div class="empty">// sin ventas registradas</div>';return;}
 
   list.innerHTML=diasOrdenados.map(fecha=>{
@@ -757,76 +781,105 @@ function filtrarGD(f,el){
 }
 
 function renderGD(filtro){
-  if(!document.getElementById('gd-fecha').value) document.getElementById('gd-fecha').value=TODAY;
+  const gdFechaInput = document.getElementById('gd-fecha');
+  if(gdFechaInput && !gdFechaInput.value) gdFechaInput.value=TODAY;
+  
   const todos=state.gastosDiarios;
   const sem=todos.filter(g=>diasHasta(g.fecha)>=-6&&diasHasta(g.fecha)<=0);
   const mes=todos.filter(g=>g.fecha&&g.fecha.startsWith(TODAY.slice(0,7)));
   const hoy=todos.filter(g=>g.fecha===TODAY);
-  document.getElementById('metrics-gd').innerHTML=`
-    <div class="metric-card"><div class="metric-label">HOY</div><div class="metric-value red">${fmt(hoy.reduce((a,b)=>a+b.monto,0))}</div></div>
-    <div class="metric-card"><div class="metric-label">ESTA SEMANA</div><div class="metric-value orange">${fmt(sem.reduce((a,b)=>a+b.monto,0))}</div></div>
-    <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value yellow">${fmt(mes.reduce((a,b)=>a+b.monto,0))}</div></div>
-  `;
+  
+  const metricsGd = document.getElementById('metrics-gd');
+  if(metricsGd) {
+    metricsGd.innerHTML=`
+        <div class="metric-card"><div class="metric-label">HOY</div><div class="metric-value red">${fmt(hoy.reduce((a,b)=>a+b.monto,0))}</div></div>
+        <div class="metric-card"><div class="metric-label">ESTA SEMANA</div><div class="metric-value orange">${fmt(sem.reduce((a,b)=>a+b.monto,0))}</div></div>
+        <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value yellow">${fmt(mes.reduce((a,b)=>a+b.monto,0))}</div></div>
+    `;
+  }
+
   let lista=filtro==='todo'?todos:filtro==='otros'
     ?todos.filter(g=>!['super','carne','verdura'].includes(g.cat))
     :todos.filter(g=>g.cat===filtro);
   lista=[...lista].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id);
-  document.getElementById('gd-list').innerHTML=lista.length?lista.map(g=>`
-    <div class="list-row">
-      <div class="main-info">
-        <strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
-        <span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco / MP':'Efectivo'}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
-        <button class="btn-danger-sm" onclick="eliminarGD(${g.id})">x</button>
-      </div>
-    </div>`).join(''):'<div class="empty">// sin gastos en esta categoria</div>';
+  
+  const gdList = document.getElementById('gd-list');
+  if(gdList) {
+    gdList.innerHTML=lista.length?lista.map(g=>`
+        <div class="list-row">
+          <div class="main-info">
+            <strong>${catInfo[g.cat]?.emoji||'📦'} ${g.desc||(catInfo[g.cat]?.label||'Gasto')}</strong>
+            <span class="sub">${fmtD(g.fecha)} - ${pagoIcon[g.pago]||'💵'} ${g.pago==='banco'?'Banco / MP':'Efectivo'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="amount-col" style="color:var(--red)">${fmt(g.monto)}</span>
+            <button class="btn-danger-sm" onclick="eliminarGD(${g.id})">x</button>
+          </div>
+        </div>`).join(''):'<div class="empty">// sin gastos en esta categoria</div>';
+  }
 }
 
 function renderBoletas(){
-  if(!document.getElementById('b-fecha').value) document.getElementById('b-fecha').value=TODAY;
+  const bFechaInput = document.getElementById('b-fecha');
+  if(bFechaInput && !bFechaInput.value) bFechaInput.value=TODAY;
+  
   const pend=[...state.boletas].filter(b=>!b.pagada).sort((a,b)=>a.vence.localeCompare(b.vence));
   const pag=[...state.boletas].filter(b=>b.pagada).sort((a,b)=>b.vence.localeCompare(a.vence));
-  document.getElementById('boletas-pend').innerHTML=pend.length?pend.map(b=>{
-    const d=diasHasta(b.vence);
-    const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
-    const lbl=d<0?`Vencida ${Math.abs(d)}d`:d===0?'Hoy':`${d}d`;
-    return `<div class="list-row">
-      <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)} - vence ${fmtD(b.vence)}</span></div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
-        <span class="badge ${cls}">${lbl}</span>
-        <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button>
-        <button class="btn-danger-sm" onclick="eliminarBoleta(${b.id})">x</button>
-      </div>
-    </div>`;
-  }).join(''):'<div class="empty">// sin boletas pendientes</div>';
-  document.getElementById('boletas-pag').innerHTML=pag.length?pag.map(b=>`
-    <div class="list-row paid">
-      <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)}</span></div>
-      <span class="amount-col">${fmt(b.monto)}</span>
-    </div>`).join(''):'<div class="empty">// ninguna todavia</div>';
+  
+  const boletasPend = document.getElementById('boletas-pend');
+  if(boletasPend) {
+    boletasPend.innerHTML=pend.length?pend.map(b=>{
+        const d=diasHasta(b.vence);
+        const cls=d<0?'red':d<=3?'red':d<=7?'orange':'blue';
+        const lbl=d<0?`Vencida ${Math.abs(d)}d`:d===0?'Hoy':`${d}d`;
+        return `<div class="list-row">
+          <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)} - vence ${fmtD(b.vence)}</span></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="amount-col" style="color:var(--red)">${fmt(b.monto)}</span>
+            <span class="badge ${cls}">${lbl}</span>
+            <button class="btn-success-sm" onclick="pagarBoleta(${b.id})">Pague</button>
+            <button class="btn-danger-sm" onclick="eliminarBoleta(${b.id})">x</button>
+          </div>
+        </div>`;
+    }).join(''):'<div class="empty">// sin boletas pendientes</div>';
+  }
+
+  const boletasPag = document.getElementById('boletas-pag');
+  if(boletasPag) {
+    boletasPag.innerHTML=pag.length?pag.map(b=>`
+        <div class="list-row paid">
+          <div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)}</span></div>
+          <span class="amount-col">${fmt(b.monto)}</span>
+        </div>`).join(''):'<div class="empty">// ninguna todavia</div>';
+  }
 }
 
 function renderFijos(){
   const total=state.gastosFijos.reduce((a,b)=>a+(b.monto||0),0);
   const neg=state.gastosFijos.filter(g=>g.cat==='negocio').reduce((a,b)=>a+(b.monto||0),0);
   const per=state.gastosFijos.filter(g=>g.cat!=='negocio').reduce((a,b)=>a+(b.monto||0),0);
-  document.getElementById('metrics-fijos').innerHTML=`
-    <div class="metric-card"><div class="metric-label">TOTAL MENSUAL</div><div class="metric-value orange">${fmt(total)}</div></div>
-    <div class="metric-card"><div class="metric-label">NEGOCIO</div><div class="metric-value">${fmt(neg)}</div></div>
-    <div class="metric-card"><div class="metric-label">PERSONAL</div><div class="metric-value">${fmt(per)}</div></div>
-  `;
+  
+  const metricsFijos = document.getElementById('metrics-fijos');
+  if(metricsFijos) {
+    metricsFijos.innerHTML=`
+        <div class="metric-card"><div class="metric-label">TOTAL MENSUAL</div><div class="metric-value orange">${fmt(total)}</div></div>
+        <div class="metric-card"><div class="metric-label">NEGOCIO</div><div class="metric-value">${fmt(neg)}</div></div>
+        <div class="metric-card"><div class="metric-label">PERSONAL</div><div class="metric-value">${fmt(per)}</div></div>
+    `;
+  }
+
   const catM={negocio:'Negocio',personal:'Personal',servicios:'Servicios'};
-  document.getElementById('fijos-list').innerHTML=state.gastosFijos.length?state.gastosFijos.map(g=>`
-    <div class="list-row">
-      <div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' - dia '+g.dia:''}</span></div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="amount-col orange">${g.monto?fmt(g.monto):'---'}</span>
-        <button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">x</button>
-      </div>
-    </div>`).join(''):'<div class="empty">// sin gastos fijos</div>';
+  const fijosList = document.getElementById('fijos-list');
+  if(fijosList) {
+    fijosList.innerHTML=state.gastosFijos.length?state.gastosFijos.map(g=>`
+        <div class="list-row">
+          <div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' - dia '+g.dia:''}</span></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="amount-col orange">${g.monto?fmt(g.monto):'---'}</span>
+            <button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">x</button>
+          </div>
+        </div>`).join(''):'<div class="empty">// sin gastos fijos</div>';
+  }
 }
 
 // ══ ACTIONS ══
