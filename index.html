@@ -351,7 +351,7 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Distribución por medio de cobro</div>
+        <div class="card-title">Distribución por medio de cobro <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— desde 22/03/2026</span></div>
         <div id="cobro-dist"></div>
       </div>
     </div>
@@ -858,15 +858,17 @@ function renderEstadisticas(){
     </div>
   `).join('');
 
-  // ── Distribución por medio de cobro ──
+  // ── Distribución por medio de cobro (solo ventas desde 22/03/2026) ──
+  const ventasCobro=ventas.filter(v=>v.fecha>'2026-03-21');
   const cobroDist={};
-  for(const v of ventas){
+  for(const v of ventasCobro){
     const k=v.tipoCobro||'none';
     if(!cobroDist[k]) cobroDist[k]={monto:0,count:0};
     cobroDist[k].monto+=v.monto;
     cobroDist[k].count++;
   }
   const totalCobro=Object.values(cobroDist).reduce((a,b)=>a+b.monto,0)||1;
+  // (datos desde 22/03/2026)
   const cobroOrdenado=Object.entries(cobroDist).sort((a,b)=>b[1].monto-a[1].monto);
   const cobroColors={none:'green',transferencia:'blue',qr:'blue',debito:'yellow',prepaga:'orange',credito:'purple'};
   document.getElementById('cobro-dist').innerHTML=cobroOrdenado.map(([tipo,data])=>{
