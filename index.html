@@ -70,6 +70,7 @@
   .metric-label{font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;}
   .metric-value{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text);}
   .metric-value.green{color:var(--green);}.metric-value.red{color:var(--red);}.metric-value.orange{color:var(--orange);}.metric-value.yellow{color:var(--yellow);}.metric-value.blue{color:var(--blue);}.metric-value.purple{color:var(--purple);}
+  .metric-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;}
   .alert{border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:10px;border:1px solid;display:flex;justify-content:space-between;align-items:center;gap:8px;}
   .alert.danger{background:var(--red-bg);border-color:rgba(248,113,113,.25);color:var(--red);}
   .alert.warning{background:var(--orange-bg);border-color:rgba(251,146,60,.25);color:var(--orange);}
@@ -146,7 +147,37 @@
   .dia-header .dia-stats{color:var(--text3);display:flex;gap:16px;}
   .dia-header .dia-total{color:var(--green);font-weight:500;}
   .dia-header .dia-count{color:var(--blue);}
-  @media(max-width:700px){.sidebar{display:none;}.main{padding:16px;}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid{grid-template-columns:1fr;}.form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}.two-col{grid-template-columns:1fr;}.saldo-breakdown{grid-template-columns:1fr;}.pin-keypad{grid-template-columns:repeat(3,64px);}}
+
+  /* ── STATS SCREEN ── */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+  .stat-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);margin-bottom:8px;}
+  .stat-value{font-family:var(--mono);font-size:20px;font-weight:500;}
+  .stat-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;}
+
+  /* Bars chart for day-of-week */
+  .dow-chart{display:flex;align-items:flex-end;gap:8px;height:100px;margin-top:4px;}
+  .dow-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;}
+  .dow-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .5s ease;}
+  .dow-label{font-size:10px;color:var(--text3);font-family:var(--mono);}
+  .dow-val{font-size:10px;color:var(--text2);font-family:var(--mono);}
+  .dow-bar.best{background:var(--accent);}
+  .dow-bar.normal{background:rgba(232,255,90,0.35);}
+
+  /* Trend chart (monthly) */
+  .trend-chart{display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:4px;}
+  .trend-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;}
+  .trend-bar{width:100%;border-radius:3px 3px 0 0;background:var(--accent);min-height:2px;opacity:0.6;transition:height .4s ease;}
+  .trend-bar.current{opacity:1;}
+  .trend-label{font-size:9px;color:var(--text3);font-family:var(--mono);}
+
+  /* Sidebar progress multi-boleta */
+  .progress-boletas-list{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+  .prog-boleta-row{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--text3);}
+  .prog-boleta-row .pbn{color:var(--text2);}
+  .prog-boleta-row .pbv{color:var(--orange);}
+
+  @media(max-width:700px){.sidebar{display:none;}.main{padding:16px;}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid{grid-template-columns:1fr;}.form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}.two-col{grid-template-columns:1fr;}.saldo-breakdown{grid-template-columns:1fr;}.pin-keypad{grid-template-columns:repeat(3,64px);}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
   ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
 </style>
 </head>
@@ -234,6 +265,7 @@
     <div class="sidebar-section">Principal</div>
     <div class="nav-item active" onclick="goTo('resumen',this)"><span class="nav-icon">◈</span> Resumen</div>
     <div class="nav-item" onclick="goTo('ventas',this)"><span class="nav-icon">↑</span> Ventas</div>
+    <div class="nav-item" onclick="goTo('estadisticas',this)"><span class="nav-icon">◎</span> Estadísticas</div>
     <div class="sidebar-section">Egresos</div>
     <div class="nav-item" onclick="goTo('gastos-diarios',this)"><span class="nav-icon">🛒</span> Gastos del dia</div>
     <div class="nav-item" onclick="goTo('boletas',this)"><span class="nav-icon">◻</span> Boletas</div>
@@ -249,6 +281,7 @@
       <div class="progress-wrap" id="sidebar-progress" style="display:none">
         <div class="progress-label"><span id="prog-left">---</span><span id="prog-right">---</span></div>
         <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+        <div class="progress-boletas-list" id="prog-boletas-list"></div>
       </div>
     </div>
   </aside>
@@ -285,6 +318,42 @@
       </div>
       <div class="metrics" id="metrics-ventas"></div>
       <div class="card"><div class="card-title">Historial por dia</div><div id="ventas-list"></div></div>
+    </div>
+
+    <!-- ══ ESTADÍSTICAS ══ -->
+    <div id="screen-estadisticas" class="screen">
+      <div class="page-title">Estadísticas</div>
+      <div class="page-subtitle">Análisis de ventas y rendimiento del negocio</div>
+
+      <div class="stats-grid" id="stats-kpi"></div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Ventas por día de la semana (promedio)</div>
+          <div class="dow-chart" id="dow-chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Tendencia mensual (últimos 6 meses)</div>
+          <div class="trend-chart" id="trend-chart"></div>
+          <div id="trend-labels" style="display:flex;gap:4px;margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Ranking días de la semana</div>
+          <div id="dow-ranking"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Top 5 mejores días</div>
+          <div id="top-dias"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Distribución por medio de cobro</div>
+        <div id="cobro-dist"></div>
+      </div>
     </div>
 
     <div id="screen-gastos-diarios" class="screen">
@@ -380,7 +449,7 @@ const SUPABASE_URL='https://fekhvycxgormbrzzfbyg.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZla2h2eWN4Z29ybWJyenpmYnlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTI5MjYsImV4cCI6MjA4OTYyODkyNn0.rqu6cVsJMMXEtmF9_VGVPugFotzumfBsM65ENagft2A';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-// ══ PIN LOGIC (SENCILLO COMO EN INDEX 3) ══
+// ══ PIN LOGIC ══
 const PIN_CORRECTO='8798';
 let pinBuffer='';
 
@@ -491,6 +560,8 @@ const catInfo={
 const pagoIcon={efectivo:'💵',banco:'🏦',a_liquidar:'💳'};
 const tipoIcon={none:'💵',transferencia:'📲',qr:'📱',debito:'💳',prepaga:'🏥',credito:'💰'};
 
+const DOW_NAMES=['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
+
 function toast(msg,type='success'){
   const t=document.getElementById('toast');
   if(!t) return;
@@ -569,7 +640,7 @@ function goTo(name,el){
 }
 
 // ══ RENDER FUNCTIONS ══
-function renderAll(){renderSidebar();renderResumen();renderVentas();renderGD(gdFilter);renderBoletas();renderFijos();}
+function renderAll(){renderSidebar();renderResumen();renderVentas();renderGD(gdFilter);renderBoletas();renderFijos();renderEstadisticas();}
 
 function renderSidebar(){
   const total=saldoTotal();
@@ -578,15 +649,30 @@ function renderSidebar(){
   document.getElementById('sb-efectivo').textContent=fmt(state.efectivo);
   document.getElementById('sb-banco').textContent=fmt(state.banco);
   document.getElementById('sb-liquidar').textContent=fmt(state.a_liquidar);
-  const bTotal=state.boletas.find(b=>b.prov==='Total'&&!b.pagada);
+
+  // ── Barra de progreso: considera TODAS las boletas pendientes ──
+  const bPend=state.boletas.filter(b=>!b.pagada);
+  const totalBoletas=bPend.reduce((a,b)=>a+b.monto,0);
   const sp=document.getElementById('sidebar-progress');
-  if(bTotal){
+  const pbl=document.getElementById('prog-boletas-list');
+
+  if(totalBoletas>0){
     sp.style.display='block';
-    const pct=Math.min(100,Math.round(total/bTotal.monto*100));
+    const pct=Math.min(100,Math.round(total/totalBoletas*100));
     document.getElementById('prog-fill').style.width=pct+'%';
     document.getElementById('prog-left').textContent=pct+'% juntado';
-    document.getElementById('prog-right').textContent='falta '+fmt(bTotal.monto-total);
-  }else{sp.style.display='none';}
+    const falta=totalBoletas-total;
+    document.getElementById('prog-right').textContent=falta>0?'falta '+fmt(falta):'✓ cubierto';
+    // Lista de boletas pendientes
+    pbl.innerHTML=bPend.sort((a,b)=>a.vence.localeCompare(b.vence)).map(b=>{
+      const d=diasHasta(b.vence);
+      const lbl=d<0?`venc.`:d===0?'hoy':`${d}d`;
+      return `<div class="prog-boleta-row"><span class="pbn">${b.prov}</span><span class="pbv">${fmt(b.monto)} <span style="color:var(--text3)">(${lbl})</span></span></div>`;
+    }).join('');
+  } else {
+    sp.style.display='none';
+    pbl.innerHTML='';
+  }
 }
 
 function renderResumen(){
@@ -649,6 +735,154 @@ function renderVentas(){
       return `<div class="list-row" style="padding-left:12px"><div class="main-info"><strong>${ic} ${label}</strong><span class="sub">${v.nota&&v.nota!=='Historial importado'?v.nota:v.nota==='Historial importado'?'Importado de planilla':'---'}</span></div><div style="display:flex;align-items:center;gap:8px"><div style="text-align:right"><div class="amount-col green">${fmt(v.monto)}</div>${netoStr}</div><button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">x</button></div></div>`;
     }).join('');
     return `<div class="dia-header"><span class="dia-fecha">${fmtFecha(fecha)}</span><span class="dia-stats">${cantStr?`<span class="dia-count">${cantStr}</span>`:''}<span class="dia-total">${fmt(dia.total)}${comStr}</span></span></div>${filas}`;
+  }).join('');
+}
+
+// ══ ESTADÍSTICAS ══
+function renderEstadisticas(){
+  const ventas=state.ventas;
+  if(!ventas.length){
+    const els=['stats-kpi','dow-chart','trend-chart','dow-ranking','top-dias','cobro-dist'];
+    els.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<div class="empty">// sin datos</div>';});
+    return;
+  }
+
+  // Agrupa ventas por fecha (suma del día)
+  const byDia={};
+  for(const v of ventas){
+    if(!byDia[v.fecha]) byDia[v.fecha]={total:0,cantidad:0};
+    byDia[v.fecha].total+=v.monto;
+    byDia[v.fecha].cantidad+=(v.cantidad||0);
+  }
+  const fechas=Object.keys(byDia);
+  const montosDia=fechas.map(f=>byDia[f].total);
+
+  // KPIs generales
+  const promedioDia=montosDia.reduce((a,b)=>a+b,0)/montosDia.length;
+  const maxDia=Math.max(...montosDia);
+  const minDia=Math.min(...montosDia);
+  const totalGeneral=montosDia.reduce((a,b)=>a+b,0);
+
+  // Mes actual
+  const mesKey=TODAY.slice(0,7);
+  const mesActual=ventas.filter(v=>v.fecha.startsWith(mesKey));
+  const totalMes=mesActual.reduce((a,b)=>a+b.monto,0);
+  const diasConVentasMes=[...new Set(mesActual.map(v=>v.fecha))].length;
+  const promMes=diasConVentasMes>0?totalMes/diasConVentasMes:0;
+
+  // Mes anterior
+  const d=new Date(TODAY);d.setDate(1);d.setMonth(d.getMonth()-1);
+  const mesAntKey=d.toISOString().slice(0,7);
+  const mesAnt=ventas.filter(v=>v.fecha.startsWith(mesAntKey));
+  const totalMesAnt=mesAnt.reduce((a,b)=>a+b.monto,0);
+  const varMes=totalMesAnt>0?Math.round((totalMes-totalMesAnt)/totalMesAnt*100):null;
+  const varStr=varMes!==null?(varMes>=0?`▲ ${varMes}%`:`▼ ${Math.abs(varMes)}%`):'';
+  const varColor=varMes===null?'':varMes>=0?'color:var(--green)':'color:var(--red)';
+
+  // Cantidad promedio por venta
+  const totalCant=ventas.reduce((a,b)=>a+(b.cantidad||0),0);
+  const promCantDia=totalCant/fechas.length;
+
+  document.getElementById('stats-kpi').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Promedio por dia</div><div class="stat-value green">${fmt(promedioDia)}</div><div class="stat-sub">${fechas.length} dias con ventas</div></div>
+    <div class="stat-card"><div class="stat-label">Este mes</div><div class="stat-value green">${fmt(totalMes)}</div><div class="stat-sub" style="${varColor}">${varStr||'primer mes'}</div></div>
+    <div class="stat-card"><div class="stat-label">Promedio este mes</div><div class="stat-value blue">${fmt(promMes)}</div><div class="stat-sub">${diasConVentasMes} dias</div></div>
+    <div class="stat-card"><div class="stat-label">Mejor dia</div><div class="stat-value yellow">${fmt(maxDia)}</div></div>
+    <div class="stat-card"><div class="stat-label">Peor dia</div><div class="stat-value orange">${fmt(minDia)}</div></div>
+    <div class="stat-card"><div class="stat-label">Total general</div><div class="stat-value">${fmt(totalGeneral)}</div><div class="stat-sub">${fechas.length} dias</div></div>
+  `;
+
+  // ── Ventas por día de la semana ──
+  // Acumula por DOW (0=Dom..6=Sab)
+  const dowTotales=Array(7).fill(0);
+  const dowConteos=Array(7).fill(0);
+  for(const f of fechas){
+    const dow=new Date(f+'T12:00:00').getDay();
+    dowTotales[dow]+=byDia[f].total;
+    dowConteos[dow]++;
+  }
+  const dowPromedios=dowTotales.map((t,i)=>dowConteos[i]>0?t/dowConteos[i]:0);
+  const maxDOW=Math.max(...dowPromedios,1);
+  const bestDOW=dowPromedios.indexOf(Math.max(...dowPromedios));
+
+  document.getElementById('dow-chart').innerHTML=DOW_NAMES.map((name,i)=>{
+    const h=Math.round(dowPromedios[i]/maxDOW*80);
+    const isBest=i===bestDOW;
+    return `<div class="dow-col">
+      <div class="dow-val">${dowPromedios[i]>0?'$'+Math.round(dowPromedios[i]/1000)+'k':''}</div>
+      <div class="dow-bar ${isBest?'best':'normal'}" style="height:${h}px"></div>
+      <div class="dow-label" style="${isBest?'color:var(--accent)':''}">${name}</div>
+    </div>`;
+  }).join('');
+
+  // ── Tendencia mensual (últimos 6 meses) ──
+  const meses=[];
+  for(let i=5;i>=0;i--){
+    const d2=new Date(TODAY);d2.setDate(1);d2.setMonth(d2.getMonth()-i);
+    const key=d2.toISOString().slice(0,7);
+    const label=d2.toLocaleDateString('es-AR',{month:'short'});
+    const total2=ventas.filter(v=>v.fecha.startsWith(key)).reduce((a,b)=>a+b.monto,0);
+    meses.push({key,label,total:total2,isCurrent:i===0});
+  }
+  const maxMes=Math.max(...meses.map(m=>m.total),1);
+  document.getElementById('trend-chart').innerHTML=meses.map(m=>{
+    const h=Math.round(m.total/maxMes*64);
+    return `<div class="trend-col">
+      <div style="font-size:9px;color:var(--text3);font-family:var(--mono)">${m.total>0?'$'+Math.round(m.total/1000)+'k':''}</div>
+      <div class="trend-bar ${m.isCurrent?'current':''}" style="height:${h}px"></div>
+    </div>`;
+  }).join('');
+  document.getElementById('trend-labels').innerHTML=meses.map(m=>`<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent?'var(--accent)':'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
+
+  // ── Ranking DOW ──
+  const dowRanking=[...dowPromedios.map((v,i)=>({i,v,name:DOW_NAMES[i],conteo:dowConteos[i]}))].sort((a,b)=>b.v-a.v);
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('dow-ranking').innerHTML=dowRanking.map((d,rank)=>`
+    <div class="list-row">
+      <div class="main-info">
+        <strong>${medals[rank]||`${rank+1}.`} ${d.name}</strong>
+        <span class="sub">${d.conteo} ${d.conteo===1?'dia':'dias'} con ventas</span>
+      </div>
+      <span class="amount-col" style="color:var(--${rank===0?'green':rank===1?'blue':'text2'})">${d.v>0?fmt(d.v):'sin datos'}</span>
+    </div>
+  `).join('');
+
+  // ── Top 5 mejores dias ──
+  const topDias=[...fechas.map(f=>({fecha:f,total:byDia[f].total}))].sort((a,b)=>b.total-a.total).slice(0,5);
+  document.getElementById('top-dias').innerHTML=topDias.map((d,i)=>`
+    <div class="list-row">
+      <div class="main-info">
+        <strong>${medals[i]||`${i+1}.`} ${fmtFecha(d.fecha)}</strong>
+      </div>
+      <span class="amount-col green">${fmt(d.total)}</span>
+    </div>
+  `).join('');
+
+  // ── Distribución por medio de cobro ──
+  const cobroDist={};
+  for(const v of ventas){
+    const k=v.tipoCobro||'none';
+    if(!cobroDist[k]) cobroDist[k]={monto:0,count:0};
+    cobroDist[k].monto+=v.monto;
+    cobroDist[k].count++;
+  }
+  const totalCobro=Object.values(cobroDist).reduce((a,b)=>a+b.monto,0)||1;
+  const cobroOrdenado=Object.entries(cobroDist).sort((a,b)=>b[1].monto-a[1].monto);
+  const cobroColors={none:'green',transferencia:'blue',qr:'blue',debito:'yellow',prepaga:'orange',credito:'purple'};
+  document.getElementById('cobro-dist').innerHTML=cobroOrdenado.map(([tipo,data])=>{
+    const pct=Math.round(data.monto/totalCobro*100);
+    const label=COMISIONES[tipo]?.label||tipo;
+    const icon=tipoIcon[tipo]||'💵';
+    const col=cobroColors[tipo]||'text';
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:13px">${icon} ${label}</span>
+        <span style="font-family:var(--mono);font-size:13px;color:var(--${col})">${fmt(data.monto)} <span style="color:var(--text3);font-size:11px">${pct}%</span></span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${pct}%;background:var(--${col})"></div>
+      </div>
+    </div>`;
   }).join('');
 }
 
