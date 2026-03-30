@@ -329,7 +329,7 @@
 
       <div class="two-col">
         <div class="card">
-          <div class="card-title">Ventas por día de la semana (promedio)</div>
+          <div class="card-title">Ventas por día de la semana (promedio $) <span style="font-weight:400;color:var(--blue);text-transform:none;letter-spacing:0">✦ cant. prom.</span></div>
           <div class="dow-chart" id="dow-chart"></div>
         </div>
         <div class="card">
@@ -779,16 +779,22 @@ function renderEstadisticas(){
   const varStr=varMes!==null?(varMes>=0?`▲ ${varMes}%`:`▼ ${Math.abs(varMes)}%`):'';
   const varColor=varMes===null?'':varMes>=0?'color:var(--green)':'color:var(--red)';
 
-  // Cantidad promedio por venta
+  // Cantidad
   const totalCant=ventas.reduce((a,b)=>a+(b.cantidad||0),0);
   const promCantDia=totalCant/fechas.length;
+  const cantDias=fechas.map(f=>byDia[f].cantidad);
+  const maxCantDia=Math.max(...cantDias);
+  const cantMes=mesActual.reduce((a,b)=>a+(b.cantidad||0),0);
+  const promCantMes=diasConVentasMes>0?cantMes/diasConVentasMes:0;
 
   document.getElementById('stats-kpi').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Promedio por dia</div><div class="stat-value green">${fmt(promedioDia)}</div><div class="stat-sub">${fechas.length} dias con ventas</div></div>
-    <div class="stat-card"><div class="stat-label">Este mes</div><div class="stat-value green">${fmt(totalMes)}</div><div class="stat-sub" style="${varColor}">${varStr||'primer mes'}</div></div>
-    <div class="stat-card"><div class="stat-label">Promedio este mes</div><div class="stat-value blue">${fmt(promMes)}</div><div class="stat-sub">${diasConVentasMes} dias</div></div>
-    <div class="stat-card"><div class="stat-label">Mejor dia</div><div class="stat-value yellow">${fmt(maxDia)}</div></div>
-    <div class="stat-card"><div class="stat-label">Peor dia</div><div class="stat-value orange">${fmt(minDia)}</div></div>
+    <div class="stat-card"><div class="stat-label">Promedio $ por dia</div><div class="stat-value green">${fmt(promedioDia)}</div><div class="stat-sub">${fechas.length} dias con ventas</div></div>
+    <div class="stat-card"><div class="stat-label">Promedio cant. por dia</div><div class="stat-value blue">${promCantDia.toFixed(1)}</div><div class="stat-sub">ventas/dia</div></div>
+    <div class="stat-card"><div class="stat-label">Este mes $</div><div class="stat-value green">${fmt(totalMes)}</div><div class="stat-sub" style="${varColor}">${varStr||'primer mes'}</div></div>
+    <div class="stat-card"><div class="stat-label">Este mes cant.</div><div class="stat-value blue">${cantMes.toLocaleString('es-AR')}</div><div class="stat-sub">prom. ${promCantMes.toFixed(1)}/dia</div></div>
+    <div class="stat-card"><div class="stat-label">Mejor dia $</div><div class="stat-value yellow">${fmt(maxDia)}</div></div>
+    <div class="stat-card"><div class="stat-label">Mejor dia cant.</div><div class="stat-value yellow">${maxCantDia.toLocaleString('es-AR')}</div><div class="stat-sub">ventas en un dia</div></div>
+    <div class="stat-card"><div class="stat-label">Peor dia $</div><div class="stat-value orange">${fmt(minDia)}</div></div>
     <div class="stat-card"><div class="stat-label">Total general</div><div class="stat-value">${fmt(totalGeneral)}</div><div class="stat-sub">${fechas.length} dias</div></div>
   `;
 
@@ -796,22 +802,27 @@ function renderEstadisticas(){
   // Acumula por DOW (0=Dom..6=Sab)
   const dowTotales=Array(7).fill(0);
   const dowConteos=Array(7).fill(0);
+  const dowCantidades=Array(7).fill(0);
   for(const f of fechas){
     const dow=new Date(f+'T12:00:00').getDay();
     dowTotales[dow]+=byDia[f].total;
     dowConteos[dow]++;
+    dowCantidades[dow]+=byDia[f].cantidad;
   }
   const dowPromedios=dowTotales.map((t,i)=>dowConteos[i]>0?t/dowConteos[i]:0);
+  const dowPromCant=dowCantidades.map((c,i)=>dowConteos[i]>0?(c/dowConteos[i]):0);
   const maxDOW=Math.max(...dowPromedios,1);
   const bestDOW=dowPromedios.indexOf(Math.max(...dowPromedios));
 
   document.getElementById('dow-chart').innerHTML=DOW_NAMES.map((name,i)=>{
     const h=Math.round(dowPromedios[i]/maxDOW*80);
     const isBest=i===bestDOW;
+    const cantStr=dowPromCant[i]>0?dowPromCant[i].toFixed(1):'';
     return `<div class="dow-col">
       <div class="dow-val">${dowPromedios[i]>0?'$'+Math.round(dowPromedios[i]/1000)+'k':''}</div>
       <div class="dow-bar ${isBest?'best':'normal'}" style="height:${h}px"></div>
       <div class="dow-label" style="${isBest?'color:var(--accent)':''}">${name}</div>
+      <div style="font-size:9px;color:var(--blue);font-family:var(--mono)">${cantStr?cantStr+'✦':''}</div>
     </div>`;
   }).join('');
 
@@ -835,24 +846,25 @@ function renderEstadisticas(){
   document.getElementById('trend-labels').innerHTML=meses.map(m=>`<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent?'var(--accent)':'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
 
   // ── Ranking DOW ──
-  const dowRanking=[...dowPromedios.map((v,i)=>({i,v,name:DOW_NAMES[i],conteo:dowConteos[i]}))].sort((a,b)=>b.v-a.v);
+  const dowRanking=[...dowPromedios.map((v,i)=>({i,v,name:DOW_NAMES[i],conteo:dowConteos[i],promCant:dowPromCant[i]}))].sort((a,b)=>b.v-a.v);
   const medals=['🥇','🥈','🥉'];
   document.getElementById('dow-ranking').innerHTML=dowRanking.map((d,rank)=>`
     <div class="list-row">
       <div class="main-info">
         <strong>${medals[rank]||`${rank+1}.`} ${d.name}</strong>
-        <span class="sub">${d.conteo} ${d.conteo===1?'dia':'dias'} con ventas</span>
+        <span class="sub">${d.conteo} ${d.conteo===1?'dia':'dias'} · prom. ${d.promCant>0?d.promCant.toFixed(1)+' ventas/dia':'sin cant.'}</span>
       </div>
       <span class="amount-col" style="color:var(--${rank===0?'green':rank===1?'blue':'text2'})">${d.v>0?fmt(d.v):'sin datos'}</span>
     </div>
   `).join('');
 
   // ── Top 5 mejores dias ──
-  const topDias=[...fechas.map(f=>({fecha:f,total:byDia[f].total}))].sort((a,b)=>b.total-a.total).slice(0,5);
+  const topDias=[...fechas.map(f=>({fecha:f,total:byDia[f].total,cantidad:byDia[f].cantidad}))].sort((a,b)=>b.total-a.total).slice(0,5);
   document.getElementById('top-dias').innerHTML=topDias.map((d,i)=>`
     <div class="list-row">
       <div class="main-info">
         <strong>${medals[i]||`${i+1}.`} ${fmtFecha(d.fecha)}</strong>
+        <span class="sub">${d.cantidad>0?d.cantidad+' ventas':''}</span>
       </div>
       <span class="amount-col green">${fmt(d.total)}</span>
     </div>
