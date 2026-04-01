@@ -18,6 +18,7 @@
     --blue:#60a5fa;--blue-bg:rgba(96,165,250,0.08);
     --yellow:#fbbf24;--yellow-bg:rgba(251,191,36,0.08);
     --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.08);
+    --teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.08);
     --accent:#e8ff5a;--accent-dark:#c8e000;
     --radius:12px;--radius-sm:8px;
     --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
@@ -69,7 +70,7 @@
   .metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
   .metric-label{font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;}
   .metric-value{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text);}
-  .metric-value.green{color:var(--green);}.metric-value.red{color:var(--red);}.metric-value.orange{color:var(--orange);}.metric-value.yellow{color:var(--yellow);}.metric-value.blue{color:var(--blue);}.metric-value.purple{color:var(--purple);}
+  .metric-value.green{color:var(--green);}.metric-value.red{color:var(--red);}.metric-value.orange{color:var(--orange);}.metric-value.yellow{color:var(--yellow);}.metric-value.blue{color:var(--blue);}.metric-value.purple{color:var(--purple);}.metric-value.teal{color:var(--teal);}
   .metric-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;}
   .alert{border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:10px;border:1px solid;display:flex;justify-content:space-between;align-items:center;gap:8px;}
   .alert.danger{background:var(--red-bg);border-color:rgba(248,113,113,.25);color:var(--red);}
@@ -86,6 +87,7 @@
   .badge.orange{background:var(--orange-bg);color:var(--orange);border:1px solid rgba(251,146,60,.2);}
   .badge.blue{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(96,165,250,.2);}
   .badge.green{background:var(--green-bg);color:var(--green);border:1px solid rgba(74,222,128,.2);}
+  .badge.teal{background:var(--teal-bg);color:var(--teal);border:1px solid rgba(45,212,191,.2);}
   .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px;}
   .form-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px;}
   .form-full{margin-bottom:10px;}
@@ -102,6 +104,7 @@
   .btn-success-sm{background:var(--green-bg);color:var(--green);border-color:rgba(74,222,128,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
   .btn-edit-sm{background:var(--blue-bg);color:var(--blue);border-color:rgba(96,165,250,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
   .btn-purple-sm{background:var(--purple-bg);color:var(--purple);border-color:rgba(167,139,250,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
+  .btn-teal-sm{background:var(--teal-bg);color:var(--teal);border-color:rgba(45,212,191,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
   .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);}
   .tab{padding:8px 14px;font-size:12px;font-family:var(--mono);cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;}
   .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -148,6 +151,7 @@
   .dia-header .dia-fecha{font-weight:500;color:var(--text);}
   .dia-header .dia-stats{color:var(--text3);display:flex;gap:16px;}
   .dia-header .dia-total{color:var(--green);font-weight:500;}
+  .dia-header .dia-usd{color:var(--teal);font-weight:500;}
   .dia-header .dia-count{color:var(--blue);}
 
   /* STATS */
@@ -165,7 +169,7 @@
   .dow-bar.normal{background:rgba(232,255,90,0.35);}
   .trend-chart{display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:4px;}
   .trend-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;}
-  .trend-bar{width:100%;border-radius:3px 3px 0 0;background:var(--accent);min-height:2px;opacity:0.6;transition:height .4s ease;}
+  .trend-bar{width:100%;border-radius:3px 3px 0 0;min-height:2px;opacity:0.6;transition:height .4s ease;}
   .trend-bar.current{opacity:1;}
   .trend-label{font-size:9px;color:var(--text3);font-family:var(--mono);}
   .progress-boletas-list{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
@@ -185,7 +189,25 @@
   .liquidar-box .liq-amount{font-family:var(--mono);font-size:24px;font-weight:500;color:var(--purple);margin-bottom:12px;}
   .liquidar-box .liq-sub{font-size:12px;color:var(--text3);margin-bottom:12px;}
 
-  @media(max-width:700px){.sidebar{display:none;}.main{padding:16px;}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid{grid-template-columns:1fr;}.form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}.two-col{grid-template-columns:1fr;}.three-col{grid-template-columns:1fr;}.saldo-breakdown{grid-template-columns:1fr;}.pin-keypad{grid-template-columns:repeat(3,64px);}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  /* USD PANEL */
+  .usd-banner{background:var(--teal-bg);border:1px solid rgba(45,212,191,.2);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .usd-banner .ub-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);font-family:var(--mono);margin-bottom:3px;}
+  .usd-banner .ub-desc{font-size:12px;color:var(--text3);}
+  .usd-banner .ub-status{font-family:var(--mono);font-size:12px;}
+  .usd-tag{display:inline-block;background:var(--teal-bg);color:var(--teal);border:1px solid rgba(45,212,191,.2);border-radius:4px;font-family:var(--mono);font-size:10px;padding:1px 5px;margin-left:4px;vertical-align:middle;}
+  .usd-loading-row{display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);color:var(--text3);padding:4px 0;}
+  .usd-spinner{width:10px;height:10px;border:1.5px solid var(--border2);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+  .cotiz-chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-family:var(--mono);font-size:10px;color:var(--text3);}
+  .cotiz-chip .cc-val{color:var(--teal);}
+  .usd-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px;}
+  .usd-stat-card{background:var(--bg2);border:1px solid rgba(45,212,191,.15);border-radius:var(--radius);padding:16px;}
+  .usd-stat-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-family:var(--mono);margin-bottom:8px;opacity:.7;}
+  .usd-stat-value{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--teal);}
+  .usd-stat-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;}
+  .usd-trend-bar{background:rgba(45,212,191,0.35);}
+  .usd-trend-bar.current{background:var(--teal);}
+
+  @media(max-width:700px){.sidebar{display:none;}.main{padding:16px;}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid{grid-template-columns:1fr;}.form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}.two-col{grid-template-columns:1fr;}.three-col{grid-template-columns:1fr;}.saldo-breakdown{grid-template-columns:1fr;}.pin-keypad{grid-template-columns:repeat(3,64px);}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.usd-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
   ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
 </style>
 </head>
@@ -378,59 +400,111 @@
         <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="iniciarVenta()">+ Registrar venta</button>
       </div>
       <div class="metrics" id="metrics-ventas"></div>
-      <div class="card"><div class="card-title">Historial por dia</div><div id="ventas-list"></div></div>
+      <div class="card">
+        <div class="card-title">
+          Historial por dia
+          <span id="usd-ventas-status" class="usd-tag" style="display:none">cargando USD...</span>
+        </div>
+        <div id="ventas-list"></div>
+      </div>
     </div>
 
     <!-- ESTADISTICAS -->
     <div id="screen-estadisticas" class="screen">
       <div class="page-title">Estadisticas</div>
       <div class="page-subtitle">Analisis de ventas y rendimiento del negocio</div>
-      <div class="stats-grid" id="stats-kpi"></div>
-      <div class="two-col">
-        <div class="card">
-          <div class="card-title">Ventas por dia de la semana (promedio $)</div>
-          <div class="dow-chart" id="dow-chart"></div>
+
+      <!-- Tabs ARS / USD -->
+      <div class="tabs" id="stats-tabs">
+        <button class="tab active" onclick="setStatTab('ars',this)">$ ARS</button>
+        <button class="tab" onclick="setStatTab('usd',this)">🌐 USD (inflacion)</button>
+      </div>
+
+      <!-- PANEL ARS -->
+      <div id="stats-panel-ars">
+        <div class="stats-grid" id="stats-kpi"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Ventas por dia de la semana (promedio $)</div>
+            <div class="dow-chart" id="dow-chart"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Tendencia mensual (ultimos 6 meses)</div>
+            <div class="trend-chart" id="trend-chart"></div>
+            <div id="trend-labels" style="display:flex;gap:4px;margin-top:6px;"></div>
+          </div>
         </div>
         <div class="card">
-          <div class="card-title">Tendencia mensual (ultimos 6 meses)</div>
-          <div class="trend-chart" id="trend-chart"></div>
-          <div id="trend-labels" style="display:flex;gap:4px;margin-top:6px;"></div>
+          <div class="card-title">Dispersion — cantidad de ventas vs monto del dia <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">cada punto = un dia</span></div>
+          <div class="scatter-wrap" id="scatter-wrap">
+            <canvas id="scatter-canvas"></canvas>
+            <div class="scatter-tooltip" id="scatter-tooltip"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--text3);font-family:var(--mono);">
+            <span id="scatter-x-min"></span>
+            <span style="color:var(--text2)">← cant. ventas →</span>
+            <span id="scatter-x-max"></span>
+          </div>
+        </div>
+        <div class="three-col">
+          <div class="card"><div class="card-title">Ranking dias de la semana</div><div id="dow-ranking"></div></div>
+          <div class="card"><div class="card-title">Top 5 dias por monto</div><div id="top-dias-monto"></div></div>
+          <div class="card"><div class="card-title">Top 5 dias por cantidad</div><div id="top-dias-cantidad"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Distribucion por medio de cobro <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— desde 22/03/2026</span></div>
+          <div id="cobro-dist"></div>
         </div>
       </div>
 
-      <!-- SCATTER -->
-      <div class="card">
-        <div class="card-title">Dispersion — cantidad de ventas vs monto del dia <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">cada punto = un dia</span></div>
-        <div class="scatter-wrap" id="scatter-wrap">
-          <canvas id="scatter-canvas"></canvas>
-          <div class="scatter-tooltip" id="scatter-tooltip"></div>
+      <!-- PANEL USD -->
+      <div id="stats-panel-usd" style="display:none">
+        <div class="usd-banner">
+          <div>
+            <div class="ub-title">📊 Normalizado en USD</div>
+            <div class="ub-desc">Montos convertidos usando cotización histórica del día de cada venta</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;">Tipo de cambio</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-family:var(--mono);">
+                <input type="radio" name="tipo-dolar" value="blue" checked onchange="onTipoDolarChange()" style="width:auto;margin:0;accent-color:var(--teal)"> Blue
+              </label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-family:var(--mono);">
+                <input type="radio" name="tipo-dolar" value="oficial" onchange="onTipoDolarChange()" style="width:auto;margin:0;accent-color:var(--teal)"> Oficial
+              </label>
+            </div>
+          </div>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--text3);font-family:var(--mono);">
-          <span id="scatter-x-min"></span>
-          <span style="color:var(--text2)">← cant. ventas →</span>
-          <span id="scatter-x-max"></span>
+        <div id="usd-fetch-status" style="margin-bottom:12px;display:none">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;">
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">Obteniendo cotizaciones históricas...</div>
+            <div id="usd-fetch-rows"></div>
+          </div>
+        </div>
+        <div class="usd-stats-grid" id="usd-kpi"></div>
+        <div class="two-col">
+          <div class="card" style="border-color:rgba(45,212,191,.15)">
+            <div class="card-title" style="color:var(--teal)">Tendencia mensual en USD (6 meses)</div>
+            <div class="trend-chart" id="usd-trend-chart"></div>
+            <div id="usd-trend-labels" style="display:flex;gap:4px;margin-top:6px;"></div>
+          </div>
+          <div class="card" style="border-color:rgba(45,212,191,.15)">
+            <div class="card-title" style="color:var(--teal)">Promedio diario por mes (USD)</div>
+            <div class="trend-chart" id="usd-prom-chart"></div>
+            <div id="usd-prom-labels" style="display:flex;gap:4px;margin-top:6px;"></div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(45,212,191,.15)">
+          <div class="card-title" style="color:var(--teal)">Top 5 dias por monto USD</div>
+          <div id="usd-top-dias"></div>
+        </div>
+        <div class="card" style="border-color:rgba(45,212,191,.15)">
+          <div class="card-title" style="color:var(--teal)">Cotizaciones usadas <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)" id="usd-cotiz-fuente"></span></div>
+          <div id="usd-cotiz-list"></div>
         </div>
       </div>
 
-      <div class="three-col">
-        <div class="card">
-          <div class="card-title">Ranking dias de la semana</div>
-          <div id="dow-ranking"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Top 5 dias por monto</div>
-          <div id="top-dias-monto"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Top 5 dias por cantidad</div>
-          <div id="top-dias-cantidad"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Distribucion por medio de cobro <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— desde 22/03/2026</span></div>
-        <div id="cobro-dist"></div>
-      </div>
     </div>
 
     <!-- GASTOS DIARIOS -->
@@ -528,6 +602,398 @@
 const SUPABASE_URL='https://fekhvycxgormbrzzfbyg.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZla2h2eWN4Z29ybWJyenpmYnlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTI5MjYsImV4cCI6MjA4OTYyODkyNn0.rqu6cVsJMMXEtmF9_VGVPugFotzumfBsM65ENagft2A';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// ══════════════════════════════════════════
+// ══ SISTEMA DE COTIZACIONES USD ══════════
+// ══════════════════════════════════════════
+
+// Cache en memoria: { "blue:2024/01/15": { compra, venta, promedio, fecha_real } }
+const cotizCache = {};
+
+// Estadísticas de fetch para el panel
+let usdFetchLog = [];
+let usdFetchActive = false;
+
+/**
+ * Obtiene la cotización de una fecha específica con fallback a días hábiles anteriores.
+ * @param {string} fecha - Formato "YYYY-MM-DD"
+ * @param {string} tipo  - "blue" | "oficial"
+ * @returns {Promise<{compra,venta,promedio,fecha_real,tipo,fallback_dias}>}
+ */
+async function fetchCotizacion(fecha, tipo = 'blue') {
+  // Normalizar fecha a YYYY/MM/DD para la API
+  const fechaApi = fecha.replace(/-/g, '/');
+  const cacheKey = `${tipo}:${fechaApi}`;
+
+  if (cotizCache[cacheKey]) return cotizCache[cacheKey];
+
+  const MAX_FALLBACK_DIAS = 7;
+  const TIMEOUT_MS = 8000;
+
+  let fechaIntento = new Date(fecha + 'T12:00:00');
+  let fallbackDias = 0;
+  let lastError = null;
+
+  for (let intento = 0; intento <= MAX_FALLBACK_DIAS; intento++) {
+    const fechaStr = fechaIntento.toISOString().split('T')[0];
+    const fechaApiStr = fechaStr.replace(/-/g, '/');
+    const url = `https://api.argentinadatos.com/v1/cotizaciones/dolares/${tipo}/${fechaApiStr}`;
+
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+      const resp = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+
+      if (resp.status === 404 || resp.status === 204) {
+        // Día sin datos (feriado/finde) → retroceder un día
+        fechaIntento.setDate(fechaIntento.getDate() - 1);
+        fallbackDias++;
+        continue;
+      }
+
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+      const data = await resp.json();
+
+      if (!data || (data.venta == null && data.compra == null)) {
+        fechaIntento.setDate(fechaIntento.getDate() - 1);
+        fallbackDias++;
+        continue;
+      }
+
+      const compra = Number(data.compra) || 0;
+      const venta = Number(data.venta) || 0;
+      const promedio = venta > 0 ? (compra + venta) / 2 : compra;
+
+      const resultado = { compra, venta, promedio, fecha_real: fechaStr, tipo, fallback_dias: fallbackDias };
+
+      // Guardar en cache la clave original y la clave del día que respondió
+      cotizCache[cacheKey] = resultado;
+      const cacheKeyReal = `${tipo}:${fechaApiStr}`;
+      if (cacheKeyReal !== cacheKey) cotizCache[cacheKeyReal] = resultado;
+
+      return resultado;
+
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        lastError = new Error('Timeout al consultar cotización');
+      } else {
+        lastError = err;
+      }
+      // En caso de error de red retroceder e intentar día anterior
+      fechaIntento.setDate(fechaIntento.getDate() - 1);
+      fallbackDias++;
+    }
+  }
+
+  // Si agotamos todos los intentos, lanzar error descriptivo
+  throw new Error(`No se pudo obtener cotización ${tipo} para ${fecha} (${MAX_FALLBACK_DIAS} días intentados). Último error: ${lastError?.message || 'desconocido'}`);
+}
+
+/**
+ * Convierte un monto ARS a USD usando la cotización del día.
+ * @param {number} montoARS
+ * @param {string} fecha  - "YYYY-MM-DD"
+ * @param {string} tipo   - "blue" | "oficial"
+ * @param {string} usarPrecio - "venta" | "compra" | "promedio"
+ * @returns {Promise<number>} monto en USD
+ */
+async function convertirAUSD(montoARS, fecha, tipo = 'blue', usarPrecio = 'venta') {
+  const cotiz = await fetchCotizacion(fecha, tipo);
+  const precio = cotiz[usarPrecio] || cotiz.promedio || cotiz.venta || 1;
+  if (precio <= 0) throw new Error('Cotización inválida (precio = 0)');
+  return montoARS / precio;
+}
+
+/**
+ * Pre-carga las cotizaciones de todas las fechas únicas de ventas.
+ * Muestra progreso en el panel USD.
+ * @param {string[]} fechas  - Array de "YYYY-MM-DD"
+ * @param {string}   tipo    - "blue" | "oficial"
+ */
+async function precargarCotizaciones(fechas, tipo = 'blue') {
+  const fechasUnicas = [...new Set(fechas)].sort();
+  const total = fechasUnicas.length;
+  if (total === 0) return;
+
+  const statusEl = document.getElementById('usd-fetch-status');
+  const rowsEl = document.getElementById('usd-fetch-rows');
+  if (statusEl) statusEl.style.display = 'block';
+
+  usdFetchLog = [];
+  usdFetchActive = true;
+
+  // Procesar en lotes de 3 para no saturar la API
+  const LOTE = 3;
+  for (let i = 0; i < fechasUnicas.length; i += LOTE) {
+    const lote = fechasUnicas.slice(i, i + LOTE);
+    await Promise.all(lote.map(async fecha => {
+      const cacheKey = `${tipo}:${fecha.replace(/-/g, '/')}`;
+      if (cotizCache[cacheKey]) {
+        usdFetchLog.push({ fecha, ok: true, fromCache: true, cotiz: cotizCache[cacheKey] });
+        actualizarFetchUI(rowsEl, total);
+        return;
+      }
+      try {
+        const cotiz = await fetchCotizacion(fecha, tipo);
+        usdFetchLog.push({ fecha, ok: true, fromCache: false, cotiz });
+      } catch (e) {
+        usdFetchLog.push({ fecha, ok: false, error: e.message });
+      }
+      actualizarFetchUI(rowsEl, total);
+    }));
+  }
+
+  usdFetchActive = false;
+  if (statusEl) setTimeout(() => { statusEl.style.display = 'none'; }, 1500);
+}
+
+function actualizarFetchUI(rowsEl, total) {
+  if (!rowsEl) return;
+  const ok = usdFetchLog.filter(r => r.ok).length;
+  const err = usdFetchLog.filter(r => !r.ok).length;
+  const pct = Math.round(usdFetchLog.length / total * 100);
+  rowsEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <div style="flex:1;background:var(--bg3);border-radius:99px;height:4px;overflow:hidden;">
+        <div style="height:100%;border-radius:99px;background:var(--teal);width:${pct}%;transition:width .3s"></div>
+      </div>
+      <span style="font-size:10px;color:var(--teal);font-family:var(--mono);white-space:nowrap">${usdFetchLog.length}/${total}</span>
+    </div>
+    <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">
+      ✓ ${ok} obtenidas${err > 0 ? ` · ✗ ${err} con error` : ''}
+      ${usdFetchLog.length < total ? ' · <span class="usd-spinner" style="display:inline-block"></span>' : ''}
+    </div>`;
+}
+
+// ══ Tipo de dólar activo ══
+let tipoDolarActivo = 'blue';
+function onTipoDolarChange() {
+  const sel = document.querySelector('input[name="tipo-dolar"]:checked');
+  if (sel) tipoDolarActivo = sel.value;
+  renderUSDPanel();
+}
+function getTipoDolar() { return tipoDolarActivo; }
+
+// ══ Tab activo en estadísticas ══
+let statTabActivo = 'ars';
+function setStatTab(tab, el) {
+  statTabActivo = tab;
+  document.querySelectorAll('#stats-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('stats-panel-ars').style.display = tab === 'ars' ? '' : 'none';
+  document.getElementById('stats-panel-usd').style.display = tab === 'usd' ? '' : 'none';
+  if (tab === 'usd') renderUSDPanel();
+}
+
+/**
+ * Renderiza el panel de estadísticas en USD.
+ * Obtiene cotizaciones de forma asíncrona y luego pinta los datos.
+ */
+async function renderUSDPanel() {
+  const ventas = state.ventas;
+  const tipo = getTipoDolar();
+  const kpiEl = document.getElementById('usd-kpi');
+  const topEl = document.getElementById('usd-top-dias');
+  const cotizListEl = document.getElementById('usd-cotiz-list');
+  const cotizFuenteEl = document.getElementById('usd-cotiz-fuente');
+
+  if (!ventas.length) {
+    if (kpiEl) kpiEl.innerHTML = '<div class="empty">// sin datos de ventas</div>';
+    return;
+  }
+
+  const fechas = [...new Set(ventas.map(v => v.fecha))];
+
+  // Mostrar spinner mientras carga
+  if (kpiEl) kpiEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--text3);padding:16px 0;"><div class="loading-spinner" style="width:18px;height:18px;border-width:2px"></div> Obteniendo cotizaciones...</div>`;
+
+  await precargarCotizaciones(fechas, tipo);
+
+  // Construir mapa fecha → monto USD
+  const byDiaUSD = {};
+  const byDiaARS = {};
+
+  for (const v of ventas) {
+    if (!byDiaARS[v.fecha]) byDiaARS[v.fecha] = 0;
+    byDiaARS[v.fecha] += v.monto;
+  }
+
+  let totalUSD = 0;
+  const errores = [];
+
+  for (const fecha of fechas) {
+    const cacheKey = `${tipo}:${fecha.replace(/-/g, '/')}`;
+    const cotiz = cotizCache[cacheKey];
+    if (cotiz && cotiz.venta > 0) {
+      const usd = byDiaARS[fecha] / cotiz.venta;
+      byDiaUSD[fecha] = usd;
+      totalUSD += usd;
+    } else {
+      byDiaUSD[fecha] = null;
+      errores.push(fecha);
+    }
+  }
+
+  // ── KPIs ──
+  const diasConUSD = Object.entries(byDiaUSD).filter(([,v]) => v !== null);
+  const promedioUSD = diasConUSD.length > 0 ? totalUSD / diasConUSD.length : 0;
+  const maxUSD = diasConUSD.length > 0 ? Math.max(...diasConUSD.map(([,v]) => v)) : 0;
+
+  const mesKey = TODAY.slice(0, 7);
+  const mesActualUSD = diasConUSD.filter(([f]) => f.startsWith(mesKey)).reduce((a, [,v]) => a + v, 0);
+  const diasMesActual = diasConUSD.filter(([f]) => f.startsWith(mesKey)).length;
+  const promMesUSD = diasMesActual > 0 ? mesActualUSD / diasMesActual : 0;
+
+  const d2 = new Date(TODAY); d2.setDate(1); d2.setMonth(d2.getMonth() - 1);
+  const mesAntKey = d2.toISOString().slice(0, 7);
+  const mesAntUSD = diasConUSD.filter(([f]) => f.startsWith(mesAntKey)).reduce((a, [,v]) => a + v, 0);
+  const varMesUSD = mesAntUSD > 0 ? Math.round((mesActualUSD - mesAntUSD) / mesAntUSD * 100) : null;
+  const varStr = varMesUSD !== null ? (varMesUSD >= 0 ? `▲ ${varMesUSD}%` : `▼ ${Math.abs(varMesUSD)}%`) : '';
+  const varColor = varMesUSD === null ? '' : varMesUSD >= 0 ? 'color:var(--green)' : 'color:var(--red)';
+
+  const fmtUSD = n => n == null ? '---' : 'U$S ' + n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const fmtUSDDec = n => n == null ? '---' : 'U$S ' + n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  if (kpiEl) kpiEl.innerHTML = `
+    <div class="usd-stat-card"><div class="usd-stat-label">Promedio $ por dia</div><div class="usd-stat-value">${fmtUSD(promedioUSD)}</div><div class="usd-stat-sub">${diasConUSD.length} dias convertidos</div></div>
+    <div class="usd-stat-card"><div class="usd-stat-label">Este mes</div><div class="usd-stat-value">${fmtUSD(mesActualUSD)}</div><div class="usd-stat-sub" style="${varColor}">${varStr || 'primer mes'}</div></div>
+    <div class="usd-stat-card"><div class="usd-stat-label">Prom. este mes/dia</div><div class="usd-stat-value">${fmtUSDDec(promMesUSD)}</div><div class="usd-stat-sub">${diasMesActual} dias</div></div>
+    <div class="usd-stat-card"><div class="usd-stat-label">Mejor dia USD</div><div class="usd-stat-value">${fmtUSD(maxUSD)}</div></div>
+    <div class="usd-stat-card"><div class="usd-stat-label">Total historico</div><div class="usd-stat-value">${fmtUSD(totalUSD)}</div><div class="usd-stat-sub">${diasConUSD.length} dias</div></div>
+    ${errores.length > 0 ? `<div class="usd-stat-card" style="border-color:rgba(248,113,113,.2)"><div class="usd-stat-label" style="color:var(--red)">Sin cotizacion</div><div class="usd-stat-value" style="color:var(--red);font-size:16px">${errores.length} dias</div><div class="usd-stat-sub">${errores.slice(0,3).map(f=>fmtD(f)).join(', ')}${errores.length>3?'...':''}</div></div>` : ''}
+  `;
+
+  // ── Tendencia mensual USD ──
+  const meses = [];
+  for (let i = 5; i >= 0; i--) {
+    const dm = new Date(TODAY); dm.setDate(1); dm.setMonth(dm.getMonth() - i);
+    const key = dm.toISOString().slice(0, 7);
+    const label = dm.toLocaleDateString('es-AR', { month: 'short' });
+    const tot = diasConUSD.filter(([f]) => f.startsWith(key)).reduce((a, [,v]) => a + v, 0);
+    const diasM = diasConUSD.filter(([f]) => f.startsWith(key)).length;
+    meses.push({ key, label, total: tot, diasM, isCurrent: i === 0 });
+  }
+  const maxMesUSD = Math.max(...meses.map(m => m.total), 1);
+  const maxPromMesUSD = Math.max(...meses.map(m => m.diasM > 0 ? m.total / m.diasM : 0), 1);
+
+  const usdTrendEl = document.getElementById('usd-trend-chart');
+  const usdTrendLabels = document.getElementById('usd-trend-labels');
+  if (usdTrendEl) {
+    usdTrendEl.innerHTML = meses.map(m => {
+      const h = Math.round(m.total / maxMesUSD * 64);
+      return `<div class="trend-col"><div style="font-size:9px;color:var(--teal);font-family:var(--mono)">${m.total > 0 ? 'U$S' + Math.round(m.total) : ''}</div><div class="trend-bar usd-trend-bar ${m.isCurrent ? 'current' : ''}" style="height:${h}px"></div></div>`;
+    }).join('');
+  }
+  if (usdTrendLabels) {
+    usdTrendLabels.innerHTML = meses.map(m => `<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent ? 'var(--teal)' : 'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
+  }
+
+  const usdPromEl = document.getElementById('usd-prom-chart');
+  const usdPromLabels = document.getElementById('usd-prom-labels');
+  if (usdPromEl) {
+    usdPromEl.innerHTML = meses.map(m => {
+      const prom = m.diasM > 0 ? m.total / m.diasM : 0;
+      const h = Math.round(prom / maxPromMesUSD * 64);
+      return `<div class="trend-col"><div style="font-size:9px;color:var(--teal);font-family:var(--mono)">${prom > 0 ? 'U$S' + Math.round(prom) : ''}</div><div class="trend-bar usd-trend-bar ${m.isCurrent ? 'current' : ''}" style="height:${h}px"></div></div>`;
+    }).join('');
+  }
+  if (usdPromLabels) {
+    usdPromLabels.innerHTML = meses.map(m => `<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent ? 'var(--teal)' : 'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
+  }
+
+  // ── Top 5 dias USD ──
+  const top5 = [...diasConUSD].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const medals = ['🥇', '🥈', '🥉'];
+  if (topEl) {
+    topEl.innerHTML = top5.map(([fecha, usd], i) => {
+      const cacheKey = `${tipo}:${fecha.replace(/-/g, '/')}`;
+      const cotiz = cotizCache[cacheKey];
+      const cotizStr = cotiz ? `@ $${Math.round(cotiz.venta).toLocaleString('es-AR')}` : '';
+      return `<div class="list-row">
+        <div class="main-info"><strong>${medals[i] || `${i+1}.`} ${fmtFecha(fecha)}</strong><span class="sub">${fmt(byDiaARS[fecha])} ${cotizStr}</span></div>
+        <span class="amount-col" style="color:var(--teal)">${fmtUSD(usd)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Lista de cotizaciones usadas ──
+  if (cotizFuenteEl) cotizFuenteEl.textContent = `— dólar ${tipo}`;
+  if (cotizListEl) {
+    const cotizRows = [...new Set(ventas.map(v => v.fecha))].sort((a, b) => b.localeCompare(a)).map(fecha => {
+      const cacheKey = `${tipo}:${fecha.replace(/-/g, '/')}`;
+      const cotiz = cotizCache[cacheKey];
+      if (!cotiz) return `<div class="list-row"><div class="main-info"><strong>${fmtFecha(fecha)}</strong></div><span style="font-family:var(--mono);font-size:12px;color:var(--red)">Sin datos</span></div>`;
+      const fallbackStr = cotiz.fallback_dias > 0 ? `<span class="badge orange" style="margin-left:6px">↩ -${cotiz.fallback_dias}d</span>` : '';
+      const fromCache = '<span class="badge blue" style="margin-left:6px">cache</span>';
+      return `<div class="list-row">
+        <div class="main-info">
+          <strong>${fmtFecha(fecha)}</strong>
+          <span class="sub">cotiz. del ${fmtD(cotiz.fecha_real)}${cotiz.fallback_dias > 0 ? ' (día hábil anterior)' : ''}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+          <span style="font-family:var(--mono);font-size:12px;color:var(--teal)">$${Math.round(cotiz.venta).toLocaleString('es-AR')} venta</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">/ $${Math.round(cotiz.compra).toLocaleString('es-AR')} compra</span>
+          ${fallbackStr}
+        </div>
+      </div>`;
+    });
+    cotizListEl.innerHTML = cotizRows.length ? cotizRows.join('') : '<div class="empty">// sin datos</div>';
+  }
+}
+
+// ══ Enriquecer historial de ventas con USD ══
+async function enrichVentasConUSD() {
+  const tipo = getTipoDolar();
+  const fechas = [...new Set(state.ventas.map(v => v.fecha))];
+  if (!fechas.length) return;
+
+  const statusEl = document.getElementById('usd-ventas-status');
+  if (statusEl) { statusEl.style.display = ''; statusEl.textContent = 'cargando USD...'; }
+
+  await precargarCotizaciones(fechas, tipo);
+
+  if (statusEl) statusEl.style.display = 'none';
+
+  // Re-renderizar solo la lista de ventas para agregar columna USD
+  renderVentasConUSD();
+}
+
+function renderVentasConUSD() {
+  const tipo = getTipoDolar();
+  const byDia = {};
+  for (const v of state.ventas) {
+    if (!byDia[v.fecha]) byDia[v.fecha] = { ventas: [], total: 0, comision: 0, cantidad: 0 };
+    byDia[v.fecha].ventas.push(v);
+    byDia[v.fecha].total += v.monto;
+    byDia[v.fecha].comision += (v.comision || 0);
+    byDia[v.fecha].cantidad += (v.cantidad || 0);
+  }
+  const diasOrdenados = Object.keys(byDia).sort((a, b) => b.localeCompare(a));
+  const list = document.getElementById('ventas-list');
+  if (!diasOrdenados.length) { list.innerHTML = '<div class="empty">// sin ventas registradas</div>'; return; }
+
+  const fmtUSD = n => n == null ? '' : 'U$S ' + Math.round(n).toLocaleString('es-AR');
+
+  list.innerHTML = diasOrdenados.map(fecha => {
+    const dia = byDia[fecha];
+    const cacheKey = `${tipo}:${fecha.replace(/-/g, '/')}`;
+    const cotiz = cotizCache[cacheKey];
+    const usdTotal = cotiz && cotiz.venta > 0 ? dia.total / cotiz.venta : null;
+    const cotizStr = cotiz ? `<span class="cotiz-chip">$${Math.round(cotiz.venta).toLocaleString('es-AR')} ${tipo}</span>` : '';
+    const cantStr = dia.cantidad > 0 ? `${dia.cantidad} ventas` : '';
+    const comStr = dia.comision > 0 ? ` - com. ${fmt(dia.comision)}` : '';
+    const usdStr = usdTotal != null ? `<span class="dia-usd">${fmtUSD(usdTotal)}</span>` : '';
+    const filas = dia.ventas.map(v => {
+      const ic = tipoIcon[v.tipoCobro] || '💵'; const label = COMISIONES[v.tipoCobro]?.label || 'Efectivo';
+      const netoStr = v.comision > 0 ? `<div style="font-size:11px;color:var(--text3);font-family:var(--mono)">neto ${fmt(v.monto - v.comision)}</div>` : '';
+      return `<div class="list-row" style="padding-left:12px"><div class="main-info"><strong>${ic} ${label}</strong><span class="sub">${v.nota && v.nota !== 'Historial importado' ? v.nota : v.nota === 'Historial importado' ? 'Importado de planilla' : '---'}</span></div><div style="display:flex;align-items:center;gap:8px"><div style="text-align:right"><div class="amount-col green">${fmt(v.monto)}</div>${netoStr}</div><button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">x</button></div></div>`;
+    }).join('');
+    return `<div class="dia-header"><span class="dia-fecha">${fmtFecha(fecha)} ${cotizStr}</span><span class="dia-stats">${cantStr ? `<span class="dia-count">${cantStr}</span>` : ''}${usdStr}<span class="dia-total">${fmt(dia.total)}${comStr}</span></span></div>${filas}`;
+  }).join('');
+}
 
 // ══ PIN ══
 const PIN_CORRECTO='8798';
@@ -703,7 +1169,10 @@ async function loadAll(){
     state.gastosDiarios=(gd||[]).map(g=>({id:g.id,fecha:g.fecha,monto:Number(g.monto),cat:g.cat,desc:g.descripcion||'',pago:g.pago||'efectivo'}));
     state.boletas=(boletas||[]).map(b=>({id:b.id,prov:b.prov,monto:Number(b.monto),fechaBoleta:b.fecha_boleta,vence:b.vence,pagada:b.pagada}));
     state.gastosFijos=(fijos||[]).map(g=>({id:g.id,desc:g.descripcion||'',monto:Number(g.monto||0),cat:g.cat,dia:g.dia}));
-    setSyncStatus('ok');document.getElementById('loading').style.display='none';renderAll();
+    setSyncStatus('ok');document.getElementById('loading').style.display='none';
+    renderAll();
+    // Precargar cotizaciones en segundo plano para las ventas visibles
+    enrichVentasConUSD();
   }catch(e){
     setSyncStatus('error');document.getElementById('loading').style.display='none';
     toast('Error al conectar con Supabase','error');renderAll();
@@ -718,6 +1187,8 @@ function goTo(name,el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   el.classList.add('active');renderAll();
+  // Si volvemos a ventas, intentamos mostrar USD si ya hay cache
+  if(name==='ventas') renderVentasConUSD();
 }
 
 // ══ RENDER ══
@@ -755,8 +1226,6 @@ function renderResumen(){
     const d=diasHasta(b.vence);const txt=d<0?`Vencida hace ${Math.abs(d)} dias`:d===0?'Vence hoy':`Vence en ${d} dias`;
     return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> - ${fmt(b.monto)}</span><span>${txt}</span></div>`;
   }).join('');
-
-  // Liquidar tarjeta box (si hay plata a liquidar)
   let liqBox='';
   if(state.a_liquidar>0){
     liqBox=`<div class="liquidar-box">
@@ -767,13 +1236,11 @@ function renderResumen(){
     </div>`;
   }
   document.getElementById('alertas-wrap').innerHTML+=liqBox;
-
   document.getElementById('saldo-breakdown').innerHTML=`
     <div class="saldo-pocket"><div class="pocket-label">💵 EFECTIVO</div><div class="pocket-value green">${fmt(state.efectivo)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('efectivo')">Editar</button></div>
     <div class="saldo-pocket"><div class="pocket-label">🏦 BANCO / MP</div><div class="pocket-value blue">${fmt(state.banco)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('banco')">Editar</button></div>
     <div class="saldo-pocket"><div class="pocket-label">💳 A LIQUIDAR</div><div class="pocket-value purple">${fmt(state.a_liquidar)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('a_liquidar')">Editar</button></div>
   `;
-
   const hoyV=state.ventas.filter(v=>v.fecha===TODAY).reduce((a,b)=>a+b.monto,0);
   const semV=state.ventas.filter(v=>diasHasta(v.fecha)>=-6&&diasHasta(v.fecha)<=0).reduce((a,b)=>a+b.monto,0);
   const bPend=state.boletas.filter(b=>!b.pagada).reduce((a,b)=>a+b.monto,0);
@@ -816,29 +1283,15 @@ function renderVentas(){
     <div class="metric-card"><div class="metric-label">COMISIONES</div><div class="metric-value red">${fmt(totalCom)}</div></div>
     <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value green">${fmt(mes)}</div></div>
   `;
-  const byDia={};
-  for(const v of state.ventas){
-    if(!byDia[v.fecha])byDia[v.fecha]={ventas:[],total:0,comision:0,cantidad:0};
-    byDia[v.fecha].ventas.push(v);byDia[v.fecha].total+=v.monto;byDia[v.fecha].comision+=(v.comision||0);byDia[v.fecha].cantidad+=(v.cantidad||0);
-  }
-  const diasOrdenados=Object.keys(byDia).sort((a,b)=>b.localeCompare(a));
-  const list=document.getElementById('ventas-list');
-  if(!diasOrdenados.length){list.innerHTML='<div class="empty">// sin ventas registradas</div>';return;}
-  list.innerHTML=diasOrdenados.map(fecha=>{
-    const dia=byDia[fecha];
-    const cantStr=dia.cantidad>0?`${dia.cantidad} ventas`:'';
-    const comStr=dia.comision>0?` - com. ${fmt(dia.comision)}`:'';
-    const filas=dia.ventas.map(v=>{
-      const ic=tipoIcon[v.tipoCobro]||'💵';const label=COMISIONES[v.tipoCobro]?.label||'Efectivo';
-      const netoStr=v.comision>0?`<div style="font-size:11px;color:var(--text3);font-family:var(--mono)">neto ${fmt(v.monto-v.comision)}</div>`:'';
-      return `<div class="list-row" style="padding-left:12px"><div class="main-info"><strong>${ic} ${label}</strong><span class="sub">${v.nota&&v.nota!=='Historial importado'?v.nota:v.nota==='Historial importado'?'Importado de planilla':'---'}</span></div><div style="display:flex;align-items:center;gap:8px"><div style="text-align:right"><div class="amount-col green">${fmt(v.monto)}</div>${netoStr}</div><button class="btn-danger-sm" onclick="eliminarVenta(${v.id})">x</button></div></div>`;
-    }).join('');
-    return `<div class="dia-header"><span class="dia-fecha">${fmtFecha(fecha)}</span><span class="dia-stats">${cantStr?`<span class="dia-count">${cantStr}</span>`:''}<span class="dia-total">${fmt(dia.total)}${comStr}</span></span></div>${filas}`;
-  }).join('');
+  // Renderizar historial (con USD si hay cache disponible)
+  renderVentasConUSD();
 }
 
 // ══ ESTADÍSTICAS ══
 function renderEstadisticas(){
+  // Solo renderizar el panel activo
+  if (statTabActivo === 'usd') { renderUSDPanel(); return; }
+
   const ventas=state.ventas;
   if(!ventas.length){
     ['stats-kpi','dow-chart','trend-chart','dow-ranking','top-dias-monto','top-dias-cantidad','cobro-dist'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<div class="empty">// sin datos</div>';});
@@ -908,7 +1361,7 @@ function renderEstadisticas(){
   const maxMes=Math.max(...meses.map(m=>m.total),1);
   document.getElementById('trend-chart').innerHTML=meses.map(m=>{
     const h=Math.round(m.total/maxMes*64);
-    return `<div class="trend-col"><div style="font-size:9px;color:var(--text3);font-family:var(--mono)">${m.total>0?'$'+Math.round(m.total/1000)+'k':''}</div><div class="trend-bar ${m.isCurrent?'current':''}" style="height:${h}px"></div></div>`;
+    return `<div class="trend-col"><div style="font-size:9px;color:var(--text3);font-family:var(--mono)">${m.total>0?'$'+Math.round(m.total/1000)+'k':''}</div><div class="trend-bar ${m.isCurrent?'current':''}" style="height:${h}px;background:var(--accent)"></div></div>`;
   }).join('');
   document.getElementById('trend-labels').innerHTML=meses.map(m=>`<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent?'var(--accent)':'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
 
@@ -958,122 +1411,56 @@ function renderEstadisticas(){
 function renderScatter(fechas, byDia){
   const canvas=document.getElementById('scatter-canvas');
   if(!canvas)return;
-
-  // solo dias con cantidad > 0
-  const puntos=fechas.filter(f=>byDia[f].cantidad>0).map(f=>({
-    x:byDia[f].cantidad, y:byDia[f].total, fecha:f
-  }));
-  if(!puntos.length){
-    canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
-    return;
-  }
-
+  const puntos=fechas.filter(f=>byDia[f].cantidad>0).map(f=>({x:byDia[f].cantidad,y:byDia[f].total,fecha:f}));
+  if(!puntos.length){canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);return;}
   const wrap=document.getElementById('scatter-wrap');
-  const W=wrap.clientWidth||600;
-  const H=220;
-  canvas.width=W*window.devicePixelRatio;
-  canvas.height=H*window.devicePixelRatio;
-  canvas.style.width=W+'px';
-  canvas.style.height=H+'px';
-  const ctx=canvas.getContext('2d');
-  ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
-
+  const W=wrap.clientWidth||600;const H=220;
+  canvas.width=W*window.devicePixelRatio;canvas.height=H*window.devicePixelRatio;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
   const PAD={t:16,r:16,b:30,l:52};
-  const cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
-
-  const minX=0, maxX=Math.max(...puntos.map(p=>p.x))+2;
-  const minY=0, maxY=Math.max(...puntos.map(p=>p.y))*1.08;
+  const cW=W-PAD.l-PAD.r,cH=H-PAD.t-PAD.b;
+  const minX=0,maxX=Math.max(...puntos.map(p=>p.x))+2;
+  const minY=0,maxY=Math.max(...puntos.map(p=>p.y))*1.08;
   const toX=v=>PAD.l+(v-minX)/(maxX-minX)*cW;
   const toY=v=>PAD.t+cH-(v-minY)/(maxY-minY)*cH;
-
-  // colores de tema
-  const isDark=true; // siempre dark en esta app
-  const gridColor='rgba(255,255,255,0.06)';
-  const axisColor='rgba(255,255,255,0.15)';
-  const textColor='rgba(255,255,255,0.35)';
-  const dotColor='rgba(232,255,90,0.65)';
-  const dotHigh='rgba(74,222,128,0.9)';
-
-  // grid lines
+  const gridColor='rgba(255,255,255,0.06)';const axisColor='rgba(255,255,255,0.15)';const textColor='rgba(255,255,255,0.35)';
+  const dotColor='rgba(232,255,90,0.65)';const dotHigh='rgba(74,222,128,0.9)';
   ctx.strokeStyle=gridColor;ctx.lineWidth=1;
-  for(let i=1;i<=4;i++){
-    const y=PAD.t+(cH/4)*i;
-    ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(PAD.l+cW,y);ctx.stroke();
-  }
-  for(let i=1;i<=4;i++){
-    const x=PAD.l+(cW/4)*i;
-    ctx.beginPath();ctx.moveTo(x,PAD.t);ctx.lineTo(x,PAD.t+cH);ctx.stroke();
-  }
-
-  // ejes
+  for(let i=1;i<=4;i++){const y=PAD.t+(cH/4)*i;ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(PAD.l+cW,y);ctx.stroke();}
+  for(let i=1;i<=4;i++){const x=PAD.l+(cW/4)*i;ctx.beginPath();ctx.moveTo(x,PAD.t);ctx.lineTo(x,PAD.t+cH);ctx.stroke();}
   ctx.strokeStyle=axisColor;ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(PAD.l,PAD.t);ctx.lineTo(PAD.l,PAD.t+cH);ctx.lineTo(PAD.l+cW,PAD.t+cH);ctx.stroke();
-
-  // labels eje Y
-  ctx.fillStyle=textColor;ctx.font=`${10*window.devicePixelRatio/window.devicePixelRatio}px DM Mono, monospace`;ctx.textAlign='right';ctx.textBaseline='middle';
-  for(let i=0;i<=4;i++){
-    const v=minY+(maxY-minY)*i/4;
-    const y=toY(v);
-    ctx.fillText('$'+Math.round(v/1000)+'k',PAD.l-6,y);
-  }
-
-  // labels eje X
+  ctx.fillStyle=textColor;ctx.font=`10px DM Mono, monospace`;ctx.textAlign='right';ctx.textBaseline='middle';
+  for(let i=0;i<=4;i++){const v=minY+(maxY-minY)*i/4;ctx.fillText('$'+Math.round(v/1000)+'k',PAD.l-6,toY(v));}
   ctx.textAlign='center';ctx.textBaseline='top';
-  for(let i=0;i<=4;i++){
-    const v=minX+(maxX-minX)*i/4;
-    ctx.fillText(Math.round(v),toX(v),PAD.t+cH+6);
-  }
+  for(let i=0;i<=4;i++){const v=minX+(maxX-minX)*i/4;ctx.fillText(Math.round(v),toX(v),PAD.t+cH+6);}
   document.getElementById('scatter-x-min').textContent=minX;
   document.getElementById('scatter-x-max').textContent=Math.round(maxX);
-
-  // linea de tendencia (regresión lineal simple)
   if(puntos.length>2){
-    const n=puntos.length;
-    const sumX=puntos.reduce((a,p)=>a+p.x,0);
-    const sumY=puntos.reduce((a,p)=>a+p.y,0);
-    const sumXY=puntos.reduce((a,p)=>a+p.x*p.y,0);
-    const sumX2=puntos.reduce((a,p)=>a+p.x*p.x,0);
+    const n=puntos.length;const sumX=puntos.reduce((a,p)=>a+p.x,0);const sumY=puntos.reduce((a,p)=>a+p.y,0);
+    const sumXY=puntos.reduce((a,p)=>a+p.x*p.y,0);const sumX2=puntos.reduce((a,p)=>a+p.x*p.x,0);
     const denom=n*sumX2-sumX*sumX;
     if(denom!==0){
-      const slope=(n*sumXY-sumX*sumY)/denom;
-      const intercept=(sumY-slope*sumX)/n;
-      const x1=minX, y1=slope*x1+intercept;
-      const x2=maxX, y2=slope*x2+intercept;
+      const slope=(n*sumXY-sumX*sumY)/denom;const intercept=(sumY-slope*sumX)/n;
+      const x1=minX,y1=slope*x1+intercept;const x2=maxX,y2=slope*x2+intercept;
       ctx.strokeStyle='rgba(96,165,250,0.3)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
-      ctx.beginPath();ctx.moveTo(toX(x1),toY(y1));ctx.lineTo(toX(x2),toY(y2));ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.beginPath();ctx.moveTo(toX(x1),toY(y1));ctx.lineTo(toX(x2),toY(y2));ctx.stroke();ctx.setLineDash([]);
     }
   }
-
-  // puntos
   const topVal=Math.max(...puntos.map(p=>p.y));
   puntos.forEach(p=>{
-    const cx=toX(p.x),cy=toY(p.y);
-    const isTop=p.y>=topVal*0.85;
-    ctx.beginPath();ctx.arc(cx,cy,isTop?5:3.5,0,Math.PI*2);
-    ctx.fillStyle=isTop?dotHigh:dotColor;ctx.fill();
+    const cx=toX(p.x),cy=toY(p.y);const isTop=p.y>=topVal*0.85;
+    ctx.beginPath();ctx.arc(cx,cy,isTop?5:3.5,0,Math.PI*2);ctx.fillStyle=isTop?dotHigh:dotColor;ctx.fill();
   });
-
-  // tooltip on hover
   const tooltip=document.getElementById('scatter-tooltip');
   canvas._puntos=puntos;canvas._toX=toX;canvas._toY=toY;canvas._PAD=PAD;
   canvas.onmousemove=function(e){
-    const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    const rect=canvas.getBoundingClientRect();const mx=e.clientX-rect.left,my=e.clientY-rect.top;
     let closest=null,minDist=20;
-    for(const p of canvas._puntos){
-      const dx=canvas._toX(p.x)-mx,dy=canvas._toY(p.y)-my;
-      const dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<minDist){minDist=dist;closest=p;}
-    }
-    if(closest){
-      tooltip.style.display='block';
-      tooltip.style.left=Math.min(mx+12,W-160)+'px';
-      tooltip.style.top=Math.max(my-40,0)+'px';
-      tooltip.innerHTML=`${fmtFecha(closest.fecha)}<br>${closest.x} ventas · ${fmt(closest.y)}`;
-    } else {
-      tooltip.style.display='none';
-    }
+    for(const p of canvas._puntos){const dx=canvas._toX(p.x)-mx,dy=canvas._toY(p.y)-my;const dist=Math.sqrt(dx*dx+dy*dy);if(dist<minDist){minDist=dist;closest=p;}}
+    if(closest){tooltip.style.display='block';tooltip.style.left=Math.min(mx+12,W-160)+'px';tooltip.style.top=Math.max(my-40,0)+'px';tooltip.innerHTML=`${fmtFecha(closest.fecha)}<br>${closest.x} ventas · ${fmt(closest.y)}`;}
+    else{tooltip.style.display='none';}
   };
   canvas.onmouseleave=()=>{tooltip.style.display='none';};
 }
@@ -1126,6 +1513,8 @@ async function confirmarVenta(cobro,tipoCobro){
   const id=state.nextId++;state[cobro]+=neto;state.ventas.unshift({id,fecha,monto,nota,cobro,tipoCobro,comision,cantidad});
   document.getElementById('v-monto').value='';document.getElementById('v-nota').value='';document.getElementById('v-cantidad').value='';document.getElementById('comision-preview').className='comision-box';
   renderAll();setSyncStatus('loading');
+  // Actualizar cotización de la nueva fecha
+  enrichVentasConUSD();
   try{await Promise.all([sb.from('ventas').insert({id,fecha,monto,nota,cobro,tipo_cobro:tipoCobro,comision,cantidad}),saveEstado()]);setSyncStatus('ok');toast('Venta registrada');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
