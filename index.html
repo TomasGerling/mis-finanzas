@@ -105,6 +105,7 @@
   .btn-edit-sm{background:var(--blue-bg);color:var(--blue);border-color:rgba(96,165,250,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
   .btn-purple-sm{background:var(--purple-bg);color:var(--purple);border-color:rgba(167,139,250,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
   .btn-teal-sm{background:var(--teal-bg);color:var(--teal);border-color:rgba(45,212,191,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
+  .btn-orange-sm{background:var(--orange-bg);color:var(--orange);border-color:rgba(251,146,60,.2);padding:4px 10px;font-size:11px;font-family:var(--mono);border-radius:var(--radius-sm);border:1px solid;cursor:pointer;font-weight:500;transition:all .15s;}
   .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);}
   .tab{padding:8px 14px;font-size:12px;font-family:var(--mono);cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;}
   .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -217,6 +218,25 @@
   .usd-trend-bar{background:rgba(45,212,191,0.35);}
   .usd-trend-bar.current{background:var(--teal);}
 
+  /* GASTOS FIJOS — CARD MEJORADA */
+  .fijo-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;transition:border-color .15s;}
+  .fijo-card:hover{border-color:var(--border2);}
+  .fijo-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .fijo-card-info .fijo-desc{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;}
+  .fijo-card-info .fijo-meta{font-size:11px;color:var(--text3);font-family:var(--mono);}
+  .fijo-card-monto{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--orange);white-space:nowrap;}
+  .fijo-card-monto.parcial{color:var(--yellow);}
+  .fijo-card-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .fijo-progress-wrap{margin-top:8px;}
+  .fijo-progress-label{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:4px;}
+  .fijo-progress-bar{height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;}
+  .fijo-progress-fill{height:100%;border-radius:99px;background:var(--yellow);transition:width .4s ease;}
+  .fijo-progress-fill.complete{background:var(--green);}
+  .fijo-pagos-list{margin-top:8px;border-top:1px solid var(--border);padding-top:8px;}
+  .fijo-pago-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-family:var(--mono);color:var(--text3);padding:3px 0;}
+  .fijo-pago-row .fp-monto{color:var(--red);}
+  .fijo-pago-row .fp-medio{color:var(--text2);}
+
   @media(max-width:700px){.sidebar{display:none;}.main{padding:16px;}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.form-grid{grid-template-columns:1fr;}.form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}.two-col{grid-template-columns:1fr;}.three-col{grid-template-columns:1fr;}.saldo-breakdown{grid-template-columns:1fr;}.pin-keypad{grid-template-columns:repeat(3,64px);}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.usd-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
   ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
 </style>
@@ -289,7 +309,6 @@
         <span style="font-size:20px">💳</span>
         <div><div style="font-weight:600;color:var(--text)">Tarjeta de debito</div><div style="font-size:12px;color:var(--text3)">3.40% + IVA</div></div>
       </button>
-      <!-- FIX 1: prepaga ahora va a banco directamente -->
       <button class="btn" onclick="confirmarVenta('banco','prepaga')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-align:left;">
         <span style="font-size:20px">🏥</span>
         <div><div style="font-weight:600;color:var(--text)">Tarjeta prepaga</div><div style="font-size:12px;color:var(--text3)">3.93% + IVA → Banco/MP</div></div>
@@ -344,6 +363,87 @@
     <div class="modal-actions">
       <button class="btn btn-primary" style="flex:1" onclick="confirmarLiquidar()">Confirmar</button>
       <button class="btn" onclick="cerrarModalLiquidar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL GASTO FIJO — PAGAR PARCIAL / TOTAL ══ -->
+<div class="modal-overlay" id="modal-fijo-pago">
+  <div class="modal">
+    <div class="modal-title" id="modal-fijo-pago-title">Registrar pago</div>
+    <div class="modal-sub" id="modal-fijo-pago-sub"></div>
+    <div class="form-full">
+      <label class="form-label">Monto a pagar ($)</label>
+      <input type="number" id="modal-fijo-pago-monto" placeholder="0">
+    </div>
+    <div class="form-full">
+      <label class="form-label">Pagar con</label>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" id="fijo-pago-btn-efectivo" onclick="setFijoPagoBolsillo('efectivo')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;">
+          <span>💵</span><span>Efectivo</span>
+        </button>
+        <button class="btn" id="fijo-pago-btn-banco" onclick="setFijoPagoBolsillo('banco')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;">
+          <span>🏦</span><span>Banco / MP</span>
+        </button>
+      </div>
+      <div style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-top:8px;" id="fijo-pago-saldos"></div>
+    </div>
+    <div id="fijo-pago-restante-info" style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;font-family:var(--mono);font-size:12px;margin-bottom:4px;display:none;">
+      <div style="display:flex;justify-content:space-between;color:var(--text3);margin-bottom:3px;"><span>Total del gasto:</span><span id="fijo-pr-total" style="color:var(--text)"></span></div>
+      <div style="display:flex;justify-content:space-between;color:var(--text3);margin-bottom:3px;"><span>Ya pagado:</span><span id="fijo-pr-pagado" style="color:var(--yellow)"></span></div>
+      <div style="display:flex;justify-content:space-between;font-weight:600;"><span>Falta:</span><span id="fijo-pr-falta" style="color:var(--orange)"></span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmarFijoPago()">Registrar pago</button>
+      <button class="btn" onclick="cerrarModalFijoPago()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL GASTO FIJO — EDITAR MONTO ══ -->
+<div class="modal-overlay" id="modal-fijo-editar">
+  <div class="modal">
+    <div class="modal-title">Editar gasto fijo</div>
+    <div class="modal-sub" id="modal-fijo-editar-sub"></div>
+    <div class="form-grid">
+      <div>
+        <label class="form-label">Descripcion</label>
+        <input type="text" id="modal-fijo-editar-desc">
+      </div>
+      <div>
+        <label class="form-label">Monto mensual ($)</label>
+        <input type="number" id="modal-fijo-editar-monto">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="form-label">Categoria</label>
+        <select id="modal-fijo-editar-cat">
+          <option value="negocio">Negocio</option>
+          <option value="personal">Personal</option>
+          <option value="servicios">Servicios</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Dia del mes</label>
+        <input type="number" id="modal-fijo-editar-dia" min="1" max="31">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmarEditarFijo()">Guardar cambios</button>
+      <button class="btn" onclick="cerrarModalEditarFijo()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL GASTO FIJO — RESET PAGOS DEL MES ══ -->
+<div class="modal-overlay" id="modal-fijo-reset">
+  <div class="modal">
+    <div class="modal-title">Resetear pagos del mes</div>
+    <div class="modal-sub" id="modal-fijo-reset-sub">Esto va a borrar todos los pagos parciales registrados este mes para este gasto. Usalo al inicio de cada mes nuevo.</div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1;background:var(--orange);border-color:var(--orange);color:#000;" onclick="confirmarResetFijo()">Resetear</button>
+      <button class="btn" onclick="cerrarModalResetFijo()">Cancelar</button>
     </div>
   </div>
 </div>
@@ -424,18 +524,12 @@
     <div id="screen-estadisticas" class="screen">
       <div class="page-title">Estadisticas</div>
       <div class="page-subtitle">Analisis de ventas y rendimiento del negocio</div>
-
-      <!-- Tabs ARS / USD -->
       <div class="tabs" id="stats-tabs">
         <button class="tab active" onclick="setStatTab('ars',this)">$ ARS</button>
         <button class="tab" onclick="setStatTab('usd',this)">🌐 USD (inflacion)</button>
       </div>
-
-      <!-- PANEL ARS -->
       <div id="stats-panel-ars">
         <div class="stats-grid" id="stats-kpi"></div>
-
-        <!-- FIX 3: Promedio al dia X -->
         <div class="card">
           <div class="card-title">Promedio acumulado al dia X del mes</div>
           <div class="promdia-controls">
@@ -445,9 +539,7 @@
           </div>
           <div id="promdia-result"></div>
         </div>
-
         <div class="two-col">
-          <!-- FIX 2: DOW chart excluye domingo -->
           <div class="card">
             <div class="card-title">Ventas por dia de la semana (promedio $) <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— excl. domingo</span></div>
             <div class="dow-chart" id="dow-chart"></div>
@@ -480,8 +572,6 @@
           <div id="cobro-dist"></div>
         </div>
       </div>
-
-      <!-- PANEL USD -->
       <div id="stats-panel-usd" style="display:none">
         <div class="usd-banner">
           <div>
@@ -528,7 +618,6 @@
           <div id="usd-cotiz-list"></div>
         </div>
       </div>
-
     </div>
 
     <!-- GASTOS DIARIOS -->
@@ -940,13 +1029,12 @@ document.addEventListener('keydown',function(e){
 });
 
 // ══ COMISIONES ══
-// FIX 1: prepaga bolsillo → banco (no a_liquidar)
 const COMISIONES={
   none:{label:'Efectivo',rate:0,bolsillo:'efectivo'},
   transferencia:{label:'Transferencia',rate:0,bolsillo:'banco'},
   qr:{label:'QR (MP)',rate:0.0080,bolsillo:'banco'},
   debito:{label:'Debito',rate:0.0340,bolsillo:'banco'},
-  prepaga:{label:'Prepaga',rate:0.0393,bolsillo:'banco'},       // antes era a_liquidar
+  prepaga:{label:'Prepaga',rate:0.0393,bolsillo:'banco'},
   credito:{label:'Credito',rate:0.0660,bolsillo:'a_liquidar'},
 };
 const IVA=0.21;
@@ -972,6 +1060,11 @@ function comisionHTML(monto,tipo){
 // ══ STATE ══
 let state={efectivo:0,banco:0,a_liquidar:0,nextId:2000,ventas:[],gastosDiarios:[],boletas:[],gastosFijos:[]};
 let ventaPendiente=null,editSaldoKey=null,boletaPendientePago=null;
+// Estado para gastos fijos
+let fijoAccionId=null;    // id del gasto fijo que se está pagando/editando
+let fijoPagoBolsillo='banco'; // medio de pago seleccionado
+let fijoResetId=null;     // id para resetear pagos
+
 const TODAY=new Date().toISOString().split('T')[0];
 function saldoTotal(){return state.efectivo+state.banco+state.a_liquidar;}
 
@@ -1066,7 +1159,7 @@ async function confirmarLiquidar(){
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-// ══ FIX 4: Liquidar parcial desde el banner de resumen ══
+// ══ LIQUIDAR PARCIAL DESDE RESUMEN ══
 async function liquidarParcialDesdeResumen(){
   const input=document.getElementById('liq-resumen-monto');
   if(!input)return;
@@ -1078,6 +1171,186 @@ async function liquidarParcialDesdeResumen(){
   renderAll();setSyncStatus('loading');
   try{await saveEstado();setSyncStatus('ok');toast(`Liquidado ${fmt(monto)} a Banco/MP`);}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
+}
+
+// ══════════════════════════════════════════
+// ══ GASTOS FIJOS — MODAL PAGO PARCIAL ════
+// ══════════════════════════════════════════
+
+function abrirModalFijoPago(id) {
+  const g = state.gastosFijos.find(x => x.id === id);
+  if (!g) return;
+  fijoAccionId = id;
+  fijoPagoBolsillo = 'banco';
+
+  const pagado = (g.pagos || []).reduce((a, p) => a + p.monto, 0);
+  const falta = (g.monto || 0) - pagado;
+
+  document.getElementById('modal-fijo-pago-title').textContent = `Registrar pago — ${g.desc}`;
+  document.getElementById('modal-fijo-pago-sub').textContent =
+    pagado > 0
+      ? `Ya pagado: ${fmt(pagado)} de ${fmt(g.monto)} — falta ${fmt(Math.max(0, falta))}`
+      : `Total del gasto: ${fmt(g.monto)}`;
+
+  // Poner por defecto lo que falta (o el total si no pagó nada)
+  const sugerido = Math.max(0, falta);
+  document.getElementById('modal-fijo-pago-monto').value = sugerido > 0 ? Math.round(sugerido) : Math.round(g.monto || 0);
+
+  // Info restante
+  const infoEl = document.getElementById('fijo-pago-restante-info');
+  if (pagado > 0 && g.monto > 0) {
+    infoEl.style.display = 'block';
+    document.getElementById('fijo-pr-total').textContent = fmt(g.monto);
+    document.getElementById('fijo-pr-pagado').textContent = fmt(pagado);
+    document.getElementById('fijo-pr-falta').textContent = fmt(Math.max(0, falta));
+  } else {
+    infoEl.style.display = 'none';
+  }
+
+  actualizarFijoPagoBolsillo('banco');
+  document.getElementById('modal-fijo-pago').classList.add('open');
+  setTimeout(() => document.getElementById('modal-fijo-pago-monto').focus(), 100);
+}
+
+function setFijoPagoBolsillo(bolsillo) {
+  fijoPagoBolsillo = bolsillo;
+  actualizarFijoPagoBolsillo(bolsillo);
+}
+
+function actualizarFijoPagoBolsillo(bolsillo) {
+  const btnE = document.getElementById('fijo-pago-btn-efectivo');
+  const btnB = document.getElementById('fijo-pago-btn-banco');
+  if (btnE) { btnE.style.background = bolsillo === 'efectivo' ? 'var(--green-bg)' : ''; btnE.style.borderColor = bolsillo === 'efectivo' ? 'rgba(74,222,128,.4)' : ''; btnE.style.color = bolsillo === 'efectivo' ? 'var(--green)' : ''; }
+  if (btnB) { btnB.style.background = bolsillo === 'banco' ? 'var(--blue-bg)' : ''; btnB.style.borderColor = bolsillo === 'banco' ? 'rgba(96,165,250,.4)' : ''; btnB.style.color = bolsillo === 'banco' ? 'var(--blue)' : ''; }
+  const saldosEl = document.getElementById('fijo-pago-saldos');
+  if (saldosEl) saldosEl.textContent = `💵 Efectivo: ${fmt(state.efectivo)}   🏦 Banco/MP: ${fmt(state.banco)}`;
+}
+
+function cerrarModalFijoPago() {
+  document.getElementById('modal-fijo-pago').classList.remove('open');
+  fijoAccionId = null;
+}
+
+async function confirmarFijoPago() {
+  const g = state.gastosFijos.find(x => x.id === fijoAccionId);
+  if (!g) return;
+  const monto = parseFloat(document.getElementById('modal-fijo-pago-monto').value);
+  if (isNaN(monto) || monto <= 0) { toast('Ingresa un monto valido', 'error'); return; }
+
+  // Descontar del saldo
+  state[fijoPagoBolsillo] -= monto;
+
+  // Registrar pago en el historial del gasto fijo
+  if (!g.pagos) g.pagos = [];
+  const nuevoPago = { monto, bolsillo: fijoPagoBolsillo, fecha: TODAY, id: state.nextId++ };
+  g.pagos.push(nuevoPago);
+
+  cerrarModalFijoPago();
+  renderAll();
+  setSyncStatus('loading');
+
+  try {
+    await Promise.all([
+      sb.from('gastos_fijos').update({ pagos: g.pagos }).eq('id', g.id),
+      saveEstado()
+    ]);
+    setSyncStatus('ok');
+    const pagadoTotal = g.pagos.reduce((a, p) => a + p.monto, 0);
+    const falta = (g.monto || 0) - pagadoTotal;
+    if (falta <= 0) {
+      toast(`✓ ${g.desc} pagado completo`);
+    } else {
+      toast(`Pago de ${fmt(monto)} registrado — falta ${fmt(falta)}`);
+    }
+  } catch (e) {
+    setSyncStatus('error');
+    toast('Error al guardar', 'error');
+  }
+}
+
+// ══ MODAL EDITAR GASTO FIJO ══
+function abrirModalEditarFijo(id) {
+  const g = state.gastosFijos.find(x => x.id === id);
+  if (!g) return;
+  fijoAccionId = id;
+  document.getElementById('modal-fijo-editar-sub').textContent = `Editando: ${g.desc}`;
+  document.getElementById('modal-fijo-editar-desc').value = g.desc || '';
+  document.getElementById('modal-fijo-editar-monto').value = g.monto || '';
+  document.getElementById('modal-fijo-editar-cat').value = g.cat || 'negocio';
+  document.getElementById('modal-fijo-editar-dia').value = g.dia || '';
+  document.getElementById('modal-fijo-editar').classList.add('open');
+  setTimeout(() => document.getElementById('modal-fijo-editar-desc').focus(), 100);
+}
+
+function cerrarModalEditarFijo() {
+  document.getElementById('modal-fijo-editar').classList.remove('open');
+  fijoAccionId = null;
+}
+
+async function confirmarEditarFijo() {
+  const g = state.gastosFijos.find(x => x.id === fijoAccionId);
+  if (!g) return;
+  const desc = document.getElementById('modal-fijo-editar-desc').value.trim();
+  const monto = parseFloat(document.getElementById('modal-fijo-editar-monto').value);
+  const cat = document.getElementById('modal-fijo-editar-cat').value;
+  const dia = parseInt(document.getElementById('modal-fijo-editar-dia').value) || null;
+
+  if (!desc) { toast('Ingresa una descripcion', 'error'); return; }
+
+  g.desc = desc;
+  g.monto = isNaN(monto) ? 0 : monto;
+  g.cat = cat;
+  g.dia = dia;
+
+  cerrarModalEditarFijo();
+  renderAll();
+  setSyncStatus('loading');
+
+  try {
+    await sb.from('gastos_fijos').update({
+      descripcion: g.desc,
+      monto: g.monto,
+      cat: g.cat,
+      dia: g.dia
+    }).eq('id', g.id);
+    setSyncStatus('ok');
+    toast('Gasto fijo actualizado');
+  } catch (e) {
+    setSyncStatus('error');
+    toast('Error al guardar', 'error');
+  }
+}
+
+// ══ MODAL RESET PAGOS DEL MES ══
+function abrirModalResetFijo(id) {
+  const g = state.gastosFijos.find(x => x.id === id);
+  if (!g) return;
+  fijoResetId = id;
+  document.getElementById('modal-fijo-reset-sub').textContent =
+    `Esto borra todos los pagos de "${g.desc}" del historial. Usalo al inicio de cada mes nuevo para empezar de cero.`;
+  document.getElementById('modal-fijo-reset').classList.add('open');
+}
+
+function cerrarModalResetFijo() {
+  document.getElementById('modal-fijo-reset').classList.remove('open');
+  fijoResetId = null;
+}
+
+async function confirmarResetFijo() {
+  const g = state.gastosFijos.find(x => x.id === fijoResetId);
+  if (!g) return;
+  g.pagos = [];
+  cerrarModalResetFijo();
+  renderAll();
+  setSyncStatus('loading');
+  try {
+    await sb.from('gastos_fijos').update({ pagos: [] }).eq('id', g.id);
+    setSyncStatus('ok');
+    toast('Pagos reseteados para el nuevo mes');
+  } catch (e) {
+    setSyncStatus('error');
+    toast('Error al guardar', 'error');
+  }
 }
 
 // ══ LOAD / SAVE ══
@@ -1098,7 +1371,15 @@ async function loadAll(){
     state.ventas=(ventas||[]).map(v=>({id:v.id,fecha:v.fecha,monto:Number(v.monto),nota:v.nota||'',cobro:v.cobro||'efectivo',tipoCobro:v.tipo_cobro||'none',comision:Number(v.comision||0),cantidad:Number(v.cantidad||0)}));
     state.gastosDiarios=(gd||[]).map(g=>({id:g.id,fecha:g.fecha,monto:Number(g.monto),cat:g.cat,desc:g.descripcion||'',pago:g.pago||'efectivo'}));
     state.boletas=(boletas||[]).map(b=>({id:b.id,prov:b.prov,monto:Number(b.monto),fechaBoleta:b.fecha_boleta,vence:b.vence,pagada:b.pagada}));
-    state.gastosFijos=(fijos||[]).map(g=>({id:g.id,desc:g.descripcion||'',monto:Number(g.monto||0),cat:g.cat,dia:g.dia}));
+    // Cargar gastos fijos con el campo pagos (array JSON)
+    state.gastosFijos=(fijos||[]).map(g=>({
+      id:g.id,
+      desc:g.descripcion||'',
+      monto:Number(g.monto||0),
+      cat:g.cat,
+      dia:g.dia,
+      pagos: Array.isArray(g.pagos) ? g.pagos : []
+    }));
     setSyncStatus('ok');document.getElementById('loading').style.display='none';
     renderAll();
     enrichVentasConUSD();
@@ -1155,7 +1436,6 @@ function renderResumen(){
     return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> - ${fmt(b.monto)}</span><span>${txt}</span></div>`;
   }).join('');
 
-  // FIX 4: Banner "A liquidar" con input de monto parcial
   let liqBox='';
   if(state.a_liquidar>0){
     liqBox=`<div class="liquidar-box">
@@ -1228,41 +1508,30 @@ function renderPromedioAlDia(){
   if(!el)return;
   const diaX=parseInt(document.getElementById('promdia-input').value)||20;
   if(diaX<1||diaX>31){el.innerHTML='<span style="color:var(--red);font-family:var(--mono);font-size:12px">Dia entre 1 y 31</span>';return;}
-
-  // Agrupar ventas por mes
   const byMes={};
   for(const v of state.ventas){
-    const mesKey=v.fecha.slice(0,7); // "YYYY-MM"
+    const mesKey=v.fecha.slice(0,7);
     if(!byMes[mesKey])byMes[mesKey]={ventas:[]};
     byMes[mesKey].ventas.push(v);
   }
   const mesKeys=Object.keys(byMes).sort();
   if(!mesKeys.length){el.innerHTML='<div class="empty">// sin datos</div>';return;}
-
-  // Para cada mes calcular acumulado hasta dia X
   const rows=mesKeys.map(mesKey=>{
-    const[y,m]=mesKey.split('-');
-    // Solo sumar ventas cuyo dia <= diaX
     const ventasMes=byMes[mesKey].ventas.filter(v=>{
       const dia=parseInt(v.fecha.split('-')[2]);
       return dia<=diaX;
     });
     const totalAcum=ventasMes.reduce((a,b)=>a+b.monto,0);
     const diasConVentas=[...new Set(ventasMes.map(v=>v.fecha))].length;
-    // Verificar si ese mes ya superó el dia X (para marcar como completo o en curso)
     const hoyMes=TODAY.slice(0,7);
     const hoyDia=parseInt(TODAY.split('-')[2]);
     const enCurso=mesKey===hoyMes&&hoyDia<diaX;
     const label=new Date(mesKey+'-01T12:00:00').toLocaleDateString('es-AR',{month:'long',year:'numeric'});
     return{label,totalAcum,diasConVentas,enCurso,mesKey};
   });
-
-  // Calcular promedio entre meses completos
   const mesesCompletos=rows.filter(r=>!r.enCurso);
   const promTotal=mesesCompletos.length>0?mesesCompletos.reduce((a,b)=>a+b.totalAcum,0)/mesesCompletos.length:0;
-
   const maxAcum=Math.max(...rows.map(r=>r.totalAcum),1);
-
   el.innerHTML=`
     <div style="margin-bottom:12px;font-family:var(--mono);font-size:12px;color:var(--text3)">
       Promedio de meses completos: <span style="color:var(--accent);font-size:14px">${fmt(promTotal)}</span>
@@ -1331,12 +1600,10 @@ function renderEstadisticas(){
     <div class="stat-card"><div class="stat-label">Total general</div><div class="stat-value">${fmt(totalGeneral)}</div><div class="stat-sub">${fechas.length} dias</div></div>
   `;
 
-  // FIX 2: DOW chart — excluir domingo (index 0)
   const dowTotales=Array(7).fill(0),dowConteos=Array(7).fill(0),dowCantidades=Array(7).fill(0);
   for(const f of fechas){const dow=new Date(f+'T12:00:00').getDay();dowTotales[dow]+=byDia[f].total;dowConteos[dow]++;dowCantidades[dow]+=byDia[f].cantidad;}
   const dowPromedios=dowTotales.map((t,i)=>dowConteos[i]>0?t/dowConteos[i]:0);
   const dowPromCant=dowCantidades.map((c,i)=>dowConteos[i]>0?(c/dowConteos[i]):0);
-  // Excluir domingo (índice 0): solo mostrar Lun(1)..Sab(6)
   const DOW_WORK=[1,2,3,4,5,6];
   const maxDOW=Math.max(...DOW_WORK.map(i=>dowPromedios[i]),1);
   const bestDOW=DOW_WORK.reduce((best,i)=>dowPromedios[i]>dowPromedios[best]?i:best,1);
@@ -1345,7 +1612,6 @@ function renderEstadisticas(){
     return `<div class="dow-col"><div class="dow-val">${dowPromedios[i]>0?'$'+Math.round(dowPromedios[i]/1000)+'k':''}</div><div class="dow-bar ${isBest?'best':'normal'}" style="height:${h}px"></div><div class="dow-label" style="${isBest?'color:var(--accent)':''}">${DOW_NAMES[i]}</div></div>`;
   }).join('');
 
-  // Trend chart
   const meses=[];
   for(let i=5;i>=0;i--){
     const dm=new Date(TODAY);dm.setDate(1);dm.setMonth(dm.getMonth()-i);
@@ -1361,13 +1627,9 @@ function renderEstadisticas(){
   }).join('');
   document.getElementById('trend-labels').innerHTML=meses.map(m=>`<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent?'var(--accent)':'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
 
-  // Promedio al dia X
   renderPromedioAlDia();
-
-  // Scatter
   renderScatter(fechas,byDia);
 
-  // FIX 2: Ranking DOW — excluir domingo también
   const medals=['🥇','🥈','🥉'];
   const dowRanking=DOW_WORK.map(i=>({i,v:dowPromedios[i],name:DOW_NAMES[i],conteo:dowConteos[i],promCant:dowPromCant[i]})).sort((a,b)=>b.v-a.v);
   document.getElementById('dow-ranking').innerHTML=dowRanking.map((d,rank)=>`
@@ -1376,7 +1638,6 @@ function renderEstadisticas(){
       <span class="amount-col" style="color:var(--${rank===0?'green':rank===1?'blue':'text2'})">${d.v>0?fmt(d.v):'sin datos'}</span>
     </div>`).join('');
 
-  // Top 5 por monto
   const topMonto=[...fechas.map(f=>({fecha:f,total:byDia[f].total,cantidad:byDia[f].cantidad}))].sort((a,b)=>b.total-a.total).slice(0,5);
   document.getElementById('top-dias-monto').innerHTML=topMonto.map((d,i)=>`
     <div class="list-row">
@@ -1384,7 +1645,6 @@ function renderEstadisticas(){
       <span class="amount-col green">${fmt(d.total)}</span>
     </div>`).join('');
 
-  // Top 5 por cantidad
   const topCant=[...fechas.filter(f=>byDia[f].cantidad>0).map(f=>({fecha:f,total:byDia[f].total,cantidad:byDia[f].cantidad}))].sort((a,b)=>b.cantidad-a.cantidad).slice(0,5);
   document.getElementById('top-dias-cantidad').innerHTML=topCant.length?topCant.map((d,i)=>`
     <div class="list-row">
@@ -1392,7 +1652,6 @@ function renderEstadisticas(){
       <span class="amount-col blue">${d.cantidad} ventas</span>
     </div>`).join(''):'<div class="empty">// sin datos de cantidad</div>';
 
-  // Cobro dist
   const ventasCobro=ventas.filter(v=>v.fecha>'2026-03-21');
   const cobroDist={};
   for(const v of ventasCobro){const k=v.tipoCobro||'none';if(!cobroDist[k])cobroDist[k]={monto:0,count:0};cobroDist[k].monto+=v.monto;cobroDist[k].count++;}
@@ -1490,13 +1749,85 @@ function renderBoletas(){
   document.getElementById('boletas-pag').innerHTML=pag.length?pag.map(b=>`<div class="list-row paid"><div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)}</span></div><span class="amount-col">${fmt(b.monto)}</span></div>`).join(''):'<div class="empty">// ninguna todavia</div>';
 }
 
+// ══════════════════════════════════════
+// ══ RENDER GASTOS FIJOS (mejorado) ════
+// ══════════════════════════════════════
 function renderFijos(){
   const total=state.gastosFijos.reduce((a,b)=>a+(b.monto||0),0);
   const neg=state.gastosFijos.filter(g=>g.cat==='negocio').reduce((a,b)=>a+(b.monto||0),0);
   const per=state.gastosFijos.filter(g=>g.cat!=='negocio').reduce((a,b)=>a+(b.monto||0),0);
-  document.getElementById('metrics-fijos').innerHTML=`<div class="metric-card"><div class="metric-label">TOTAL MENSUAL</div><div class="metric-value orange">${fmt(total)}</div></div><div class="metric-card"><div class="metric-label">NEGOCIO</div><div class="metric-value">${fmt(neg)}</div></div><div class="metric-card"><div class="metric-label">PERSONAL</div><div class="metric-value">${fmt(per)}</div></div>`;
-  const catM={negocio:'Negocio',personal:'Personal',servicios:'Servicios'};
-  document.getElementById('fijos-list').innerHTML=state.gastosFijos.length?state.gastosFijos.map(g=>`<div class="list-row"><div class="main-info"><strong>${g.desc}</strong><span class="sub">${catM[g.cat]||g.cat}${g.dia?' - dia '+g.dia:''}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="amount-col orange">${g.monto?fmt(g.monto):'---'}</span><button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">x</button></div></div>`).join(''):'<div class="empty">// sin gastos fijos</div>';
+
+  // Total pagado este mes en gastos fijos (suma de todos los pagos registrados)
+  const totalPagadoFijos = state.gastosFijos.reduce((a, g) => a + (g.pagos||[]).reduce((x,p)=>x+p.monto,0), 0);
+
+  document.getElementById('metrics-fijos').innerHTML=`
+    <div class="metric-card"><div class="metric-label">TOTAL MENSUAL</div><div class="metric-value orange">${fmt(total)}</div></div>
+    <div class="metric-card"><div class="metric-label">NEGOCIO</div><div class="metric-value">${fmt(neg)}</div></div>
+    <div class="metric-card"><div class="metric-label">PERSONAL</div><div class="metric-value">${fmt(per)}</div></div>
+    <div class="metric-card"><div class="metric-label">PAGADO ESTE MES</div><div class="metric-value green">${fmt(totalPagadoFijos)}</div><div class="metric-sub" style="color:var(--orange)">falta ${fmt(Math.max(0,total-totalPagadoFijos))}</div></div>
+  `;
+
+  const catM={negocio:'🏢 Negocio',personal:'👤 Personal',servicios:'⚡ Servicios'};
+
+  if (!state.gastosFijos.length) {
+    document.getElementById('fijos-list').innerHTML='<div class="empty">// sin gastos fijos</div>';
+    return;
+  }
+
+  document.getElementById('fijos-list').innerHTML = state.gastosFijos.map(g => {
+    const pagado = (g.pagos||[]).reduce((a,p)=>a+p.monto,0);
+    const falta = Math.max(0, (g.monto||0) - pagado);
+    const pct = g.monto > 0 ? Math.min(100, Math.round(pagado/g.monto*100)) : 0;
+    const completo = falta <= 0 && pagado > 0;
+    const parcial = pagado > 0 && !completo;
+
+    // Historial de pagos del periodo actual
+    const pagosHTML = (g.pagos||[]).length > 0 ? `
+      <div class="fijo-pagos-list">
+        ${g.pagos.map(p=>`
+          <div class="fijo-pago-row">
+            <span class="fp-medio">${p.bolsillo==='banco'?'🏦 Banco/MP':'💵 Efectivo'} · ${fmtD(p.fecha||TODAY)}</span>
+            <span class="fp-monto">${fmt(p.monto)}</span>
+          </div>
+        `).join('')}
+      </div>` : '';
+
+    // Barra de progreso si hay monto definido
+    const barraHTML = g.monto > 0 ? `
+      <div class="fijo-progress-wrap">
+        <div class="fijo-progress-label">
+          <span>${completo ? '✓ Pagado completo' : parcial ? `Pagado: ${fmt(pagado)}` : 'Sin pagar'}</span>
+          <span style="color:${completo?'var(--green)':falta>0?'var(--orange)':'var(--text3)'}">
+            ${completo ? fmt(pagado) : falta > 0 ? `falta ${fmt(falta)}` : ''}
+          </span>
+        </div>
+        <div class="fijo-progress-bar">
+          <div class="fijo-progress-fill ${completo?'complete':''}" style="width:${pct}%"></div>
+        </div>
+      </div>` : '';
+
+    return `
+      <div class="fijo-card">
+        <div class="fijo-card-header">
+          <div class="fijo-card-info">
+            <div class="fijo-desc">${g.desc}</div>
+            <div class="fijo-meta">${catM[g.cat]||g.cat}${g.dia?' · dia '+g.dia:''}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="fijo-card-monto ${parcial?'parcial':''}">${g.monto?fmt(g.monto):'Sin monto'}</div>
+            ${completo?'<div style="font-size:10px;font-family:var(--mono);color:var(--green);margin-top:2px">✓ Saldado</div>':''}
+          </div>
+        </div>
+        ${barraHTML}
+        ${pagosHTML}
+        <div class="fijo-card-actions" style="margin-top:10px;">
+          <button class="btn-success-sm" onclick="abrirModalFijoPago(${g.id})">💵 Pagar</button>
+          <button class="btn-edit-sm" onclick="abrirModalEditarFijo(${g.id})">✏ Editar</button>
+          ${(g.pagos||[]).length > 0 ? `<button class="btn-orange-sm" onclick="abrirModalResetFijo(${g.id})">↺ Nuevo mes</button>` : ''}
+          <button class="btn-danger-sm" onclick="eliminarFijo(${g.id})">x</button>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // ══ ACTIONS ══
@@ -1558,10 +1889,12 @@ async function eliminarBoleta(id){
 async function agregarFijo(){
   const desc=document.getElementById('gf-desc').value.trim(),monto=parseFloat(document.getElementById('gf-monto').value),cat=document.getElementById('gf-cat').value,dia=parseInt(document.getElementById('gf-dia').value)||null;
   if(!desc){toast('Ingresa una descripcion','error');return;}
-  const id=state.nextId++;state.gastosFijos.push({id,desc,monto:isNaN(monto)?0:monto,cat,dia});
+  const id=state.nextId++;
+  const nuevoFijo={id,desc,monto:isNaN(monto)?0:monto,cat,dia,pagos:[]};
+  state.gastosFijos.push(nuevoFijo);
   document.getElementById('gf-desc').value='';document.getElementById('gf-monto').value='';document.getElementById('gf-dia').value='';
   renderAll();setSyncStatus('loading');
-  try{await Promise.all([sb.from('gastos_fijos').insert({id,descripcion:desc,monto:isNaN(monto)?0:monto,cat,dia}),saveEstado()]);setSyncStatus('ok');toast('Gasto fijo agregado');}
+  try{await Promise.all([sb.from('gastos_fijos').insert({id,descripcion:desc,monto:isNaN(monto)?0:monto,cat,dia,pagos:[]}),saveEstado()]);setSyncStatus('ok');toast('Gasto fijo agregado');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 async function eliminarFijo(id){
