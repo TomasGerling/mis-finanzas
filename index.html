@@ -183,11 +183,21 @@
   .scatter-axis-label{font-size:10px;color:var(--text3);font-family:var(--mono);position:absolute;}
   .scatter-tooltip{position:absolute;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--text);pointer-events:none;display:none;z-index:10;white-space:nowrap;}
 
+  /* PROMEDIO AL DIA X */
+  .promdia-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+  .promdia-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .promdia-controls label{font-size:11px;color:var(--text3);font-family:var(--mono);}
+  .promdia-controls input[type=number]{width:80px;text-align:center;}
+  .promdia-result{font-family:var(--mono);font-size:13px;color:var(--text2);}
+
   /* LIQUIDAR TARJETA */
   .liquidar-box{background:var(--purple-bg);border:1px solid rgba(167,139,250,.2);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
   .liquidar-box .liq-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);font-family:var(--mono);margin-bottom:8px;}
   .liquidar-box .liq-amount{font-family:var(--mono);font-size:24px;font-weight:500;color:var(--purple);margin-bottom:12px;}
   .liquidar-box .liq-sub{font-size:12px;color:var(--text3);margin-bottom:12px;}
+  .liquidar-inline{display:flex;align-items:center;gap:8px;margin-top:10px;}
+  .liquidar-inline input[type=number]{width:160px;}
+  .liquidar-inline .liq-note{font-size:11px;color:var(--text3);font-family:var(--mono);}
 
   /* USD PANEL */
   .usd-banner{background:var(--teal-bg);border:1px solid rgba(45,212,191,.2);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -279,13 +289,14 @@
         <span style="font-size:20px">💳</span>
         <div><div style="font-weight:600;color:var(--text)">Tarjeta de debito</div><div style="font-size:12px;color:var(--text3)">3.40% + IVA</div></div>
       </button>
-      <button class="btn" onclick="confirmarVenta('a_liquidar','prepaga')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-align:left;">
+      <!-- FIX 1: prepaga ahora va a banco directamente -->
+      <button class="btn" onclick="confirmarVenta('banco','prepaga')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-align:left;">
         <span style="font-size:20px">🏥</span>
-        <div><div style="font-weight:600;color:var(--text)">Tarjeta prepaga</div><div style="font-size:12px;color:var(--text3)">3.93% + IVA</div></div>
+        <div><div style="font-weight:600;color:var(--text)">Tarjeta prepaga</div><div style="font-size:12px;color:var(--text3)">3.93% + IVA → Banco/MP</div></div>
       </button>
       <button class="btn" onclick="confirmarVenta('a_liquidar','credito')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-align:left;">
         <span style="font-size:20px">💰</span>
-        <div><div style="font-weight:600;color:var(--text)">Tarjeta de credito</div><div style="font-size:12px;color:var(--text3)">6.60% + IVA</div></div>
+        <div><div style="font-weight:600;color:var(--text)">Tarjeta de credito</div><div style="font-size:12px;color:var(--text3)">6.60% + IVA → A liquidar</div></div>
       </button>
     </div>
     <div class="modal-actions"><button class="btn" style="width:100%" onclick="cerrarModalCobro()">Cancelar</button></div>
@@ -423,9 +434,22 @@
       <!-- PANEL ARS -->
       <div id="stats-panel-ars">
         <div class="stats-grid" id="stats-kpi"></div>
+
+        <!-- FIX 3: Promedio al dia X -->
+        <div class="card">
+          <div class="card-title">Promedio acumulado al dia X del mes</div>
+          <div class="promdia-controls">
+            <label>Ver promedio de ventas al dia</label>
+            <input type="number" id="promdia-input" min="1" max="31" value="20" style="width:72px" oninput="renderPromedioAlDia()">
+            <label>de cada mes</label>
+          </div>
+          <div id="promdia-result"></div>
+        </div>
+
         <div class="two-col">
+          <!-- FIX 2: DOW chart excluye domingo -->
           <div class="card">
-            <div class="card-title">Ventas por dia de la semana (promedio $)</div>
+            <div class="card-title">Ventas por dia de la semana (promedio $) <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— excl. domingo</span></div>
             <div class="dow-chart" id="dow-chart"></div>
           </div>
           <div class="card">
@@ -607,125 +631,67 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 // ══ SISTEMA DE COTIZACIONES USD ══════════
 // ══════════════════════════════════════════
 
-// Cache en memoria: { "blue:2024/01/15": { compra, venta, promedio, fecha_real } }
 const cotizCache = {};
-
-// Estadísticas de fetch para el panel
 let usdFetchLog = [];
 let usdFetchActive = false;
 
-/**
- * Obtiene la cotización de una fecha específica con fallback a días hábiles anteriores.
- * @param {string} fecha - Formato "YYYY-MM-DD"
- * @param {string} tipo  - "blue" | "oficial"
- * @returns {Promise<{compra,venta,promedio,fecha_real,tipo,fallback_dias}>}
- */
 async function fetchCotizacion(fecha, tipo = 'blue') {
-  // Normalizar fecha a YYYY/MM/DD para la API
   const fechaApi = fecha.replace(/-/g, '/');
   const cacheKey = `${tipo}:${fechaApi}`;
-
   if (cotizCache[cacheKey]) return cotizCache[cacheKey];
-
   const MAX_FALLBACK_DIAS = 7;
   const TIMEOUT_MS = 8000;
-
   let fechaIntento = new Date(fecha + 'T12:00:00');
   let fallbackDias = 0;
   let lastError = null;
-
   for (let intento = 0; intento <= MAX_FALLBACK_DIAS; intento++) {
     const fechaStr = fechaIntento.toISOString().split('T')[0];
     const fechaApiStr = fechaStr.replace(/-/g, '/');
     const url = `https://api.argentinadatos.com/v1/cotizaciones/dolares/${tipo}/${fechaApiStr}`;
-
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
       const resp = await fetch(url, { signal: controller.signal });
       clearTimeout(timer);
-
       if (resp.status === 404 || resp.status === 204) {
-        // Día sin datos (feriado/finde) → retroceder un día
-        fechaIntento.setDate(fechaIntento.getDate() - 1);
-        fallbackDias++;
-        continue;
+        fechaIntento.setDate(fechaIntento.getDate() - 1);fallbackDias++;continue;
       }
-
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
       const data = await resp.json();
-
       if (!data || (data.venta == null && data.compra == null)) {
-        fechaIntento.setDate(fechaIntento.getDate() - 1);
-        fallbackDias++;
-        continue;
+        fechaIntento.setDate(fechaIntento.getDate() - 1);fallbackDias++;continue;
       }
-
       const compra = Number(data.compra) || 0;
       const venta = Number(data.venta) || 0;
       const promedio = venta > 0 ? (compra + venta) / 2 : compra;
-
       const resultado = { compra, venta, promedio, fecha_real: fechaStr, tipo, fallback_dias: fallbackDias };
-
-      // Guardar en cache la clave original y la clave del día que respondió
       cotizCache[cacheKey] = resultado;
       const cacheKeyReal = `${tipo}:${fechaApiStr}`;
       if (cacheKeyReal !== cacheKey) cotizCache[cacheKeyReal] = resultado;
-
       return resultado;
-
     } catch (err) {
-      if (err.name === 'AbortError') {
-        lastError = new Error('Timeout al consultar cotización');
-      } else {
-        lastError = err;
-      }
-      // En caso de error de red retroceder e intentar día anterior
-      fechaIntento.setDate(fechaIntento.getDate() - 1);
-      fallbackDias++;
+      lastError = err.name === 'AbortError' ? new Error('Timeout') : err;
+      fechaIntento.setDate(fechaIntento.getDate() - 1);fallbackDias++;
     }
   }
-
-  // Si agotamos todos los intentos, lanzar error descriptivo
-  throw new Error(`No se pudo obtener cotización ${tipo} para ${fecha} (${MAX_FALLBACK_DIAS} días intentados). Último error: ${lastError?.message || 'desconocido'}`);
+  throw new Error(`No se pudo obtener cotización ${tipo} para ${fecha}. ${lastError?.message || ''}`);
 }
 
-/**
- * Convierte un monto ARS a USD usando la cotización del día.
- * @param {number} montoARS
- * @param {string} fecha  - "YYYY-MM-DD"
- * @param {string} tipo   - "blue" | "oficial"
- * @param {string} usarPrecio - "venta" | "compra" | "promedio"
- * @returns {Promise<number>} monto en USD
- */
 async function convertirAUSD(montoARS, fecha, tipo = 'blue', usarPrecio = 'venta') {
   const cotiz = await fetchCotizacion(fecha, tipo);
   const precio = cotiz[usarPrecio] || cotiz.promedio || cotiz.venta || 1;
-  if (precio <= 0) throw new Error('Cotización inválida (precio = 0)');
+  if (precio <= 0) throw new Error('Cotización inválida');
   return montoARS / precio;
 }
 
-/**
- * Pre-carga las cotizaciones de todas las fechas únicas de ventas.
- * Muestra progreso en el panel USD.
- * @param {string[]} fechas  - Array de "YYYY-MM-DD"
- * @param {string}   tipo    - "blue" | "oficial"
- */
 async function precargarCotizaciones(fechas, tipo = 'blue') {
   const fechasUnicas = [...new Set(fechas)].sort();
   const total = fechasUnicas.length;
   if (total === 0) return;
-
   const statusEl = document.getElementById('usd-fetch-status');
   const rowsEl = document.getElementById('usd-fetch-rows');
   if (statusEl) statusEl.style.display = 'block';
-
-  usdFetchLog = [];
-  usdFetchActive = true;
-
-  // Procesar en lotes de 3 para no saturar la API
+  usdFetchLog = [];usdFetchActive = true;
   const LOTE = 3;
   for (let i = 0; i < fechasUnicas.length; i += LOTE) {
     const lote = fechasUnicas.slice(i, i + LOTE);
@@ -733,8 +699,7 @@ async function precargarCotizaciones(fechas, tipo = 'blue') {
       const cacheKey = `${tipo}:${fecha.replace(/-/g, '/')}`;
       if (cotizCache[cacheKey]) {
         usdFetchLog.push({ fecha, ok: true, fromCache: true, cotiz: cotizCache[cacheKey] });
-        actualizarFetchUI(rowsEl, total);
-        return;
+        actualizarFetchUI(rowsEl, total);return;
       }
       try {
         const cotiz = await fetchCotizacion(fecha, tipo);
@@ -745,7 +710,6 @@ async function precargarCotizaciones(fechas, tipo = 'blue') {
       actualizarFetchUI(rowsEl, total);
     }));
   }
-
   usdFetchActive = false;
   if (statusEl) setTimeout(() => { statusEl.style.display = 'none'; }, 1500);
 }
@@ -764,11 +728,9 @@ function actualizarFetchUI(rowsEl, total) {
     </div>
     <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">
       ✓ ${ok} obtenidas${err > 0 ? ` · ✗ ${err} con error` : ''}
-      ${usdFetchLog.length < total ? ' · <span class="usd-spinner" style="display:inline-block"></span>' : ''}
     </div>`;
 }
 
-// ══ Tipo de dólar activo ══
 let tipoDolarActivo = 'blue';
 function onTipoDolarChange() {
   const sel = document.querySelector('input[name="tipo-dolar"]:checked');
@@ -777,7 +739,6 @@ function onTipoDolarChange() {
 }
 function getTipoDolar() { return tipoDolarActivo; }
 
-// ══ Tab activo en estadísticas ══
 let statTabActivo = 'ars';
 function setStatTab(tab, el) {
   statTabActivo = tab;
@@ -788,10 +749,6 @@ function setStatTab(tab, el) {
   if (tab === 'usd') renderUSDPanel();
 }
 
-/**
- * Renderiza el panel de estadísticas en USD.
- * Obtiene cotizaciones de forma asíncrona y luego pinta los datos.
- */
 async function renderUSDPanel() {
   const ventas = state.ventas;
   const tipo = getTipoDolar();
@@ -799,77 +756,50 @@ async function renderUSDPanel() {
   const topEl = document.getElementById('usd-top-dias');
   const cotizListEl = document.getElementById('usd-cotiz-list');
   const cotizFuenteEl = document.getElementById('usd-cotiz-fuente');
-
   if (!ventas.length) {
-    if (kpiEl) kpiEl.innerHTML = '<div class="empty">// sin datos de ventas</div>';
-    return;
+    if (kpiEl) kpiEl.innerHTML = '<div class="empty">// sin datos de ventas</div>';return;
   }
-
   const fechas = [...new Set(ventas.map(v => v.fecha))];
-
-  // Mostrar spinner mientras carga
   if (kpiEl) kpiEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--text3);padding:16px 0;"><div class="loading-spinner" style="width:18px;height:18px;border-width:2px"></div> Obteniendo cotizaciones...</div>`;
-
   await precargarCotizaciones(fechas, tipo);
-
-  // Construir mapa fecha → monto USD
-  const byDiaUSD = {};
-  const byDiaARS = {};
-
+  const byDiaUSD = {};const byDiaARS = {};
   for (const v of ventas) {
     if (!byDiaARS[v.fecha]) byDiaARS[v.fecha] = 0;
     byDiaARS[v.fecha] += v.monto;
   }
-
-  let totalUSD = 0;
-  const errores = [];
-
+  let totalUSD = 0;const errores = [];
   for (const fecha of fechas) {
     const cacheKey = `${tipo}:${fecha.replace(/-/g, '/')}`;
     const cotiz = cotizCache[cacheKey];
     if (cotiz && cotiz.venta > 0) {
-      const usd = byDiaARS[fecha] / cotiz.venta;
-      byDiaUSD[fecha] = usd;
-      totalUSD += usd;
-    } else {
-      byDiaUSD[fecha] = null;
-      errores.push(fecha);
-    }
+      const usd = byDiaARS[fecha] / cotiz.venta;byDiaUSD[fecha] = usd;totalUSD += usd;
+    } else {byDiaUSD[fecha] = null;errores.push(fecha);}
   }
-
-  // ── KPIs ──
   const diasConUSD = Object.entries(byDiaUSD).filter(([,v]) => v !== null);
   const promedioUSD = diasConUSD.length > 0 ? totalUSD / diasConUSD.length : 0;
   const maxUSD = diasConUSD.length > 0 ? Math.max(...diasConUSD.map(([,v]) => v)) : 0;
-
   const mesKey = TODAY.slice(0, 7);
   const mesActualUSD = diasConUSD.filter(([f]) => f.startsWith(mesKey)).reduce((a, [,v]) => a + v, 0);
   const diasMesActual = diasConUSD.filter(([f]) => f.startsWith(mesKey)).length;
   const promMesUSD = diasMesActual > 0 ? mesActualUSD / diasMesActual : 0;
-
-  const d2 = new Date(TODAY); d2.setDate(1); d2.setMonth(d2.getMonth() - 1);
+  const d2 = new Date(TODAY);d2.setDate(1);d2.setMonth(d2.getMonth() - 1);
   const mesAntKey = d2.toISOString().slice(0, 7);
   const mesAntUSD = diasConUSD.filter(([f]) => f.startsWith(mesAntKey)).reduce((a, [,v]) => a + v, 0);
   const varMesUSD = mesAntUSD > 0 ? Math.round((mesActualUSD - mesAntUSD) / mesAntUSD * 100) : null;
   const varStr = varMesUSD !== null ? (varMesUSD >= 0 ? `▲ ${varMesUSD}%` : `▼ ${Math.abs(varMesUSD)}%`) : '';
   const varColor = varMesUSD === null ? '' : varMesUSD >= 0 ? 'color:var(--green)' : 'color:var(--red)';
-
   const fmtUSD = n => n == null ? '---' : 'U$S ' + n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  const fmtUSDDec = n => n == null ? '---' : 'U$S ' + n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-
   if (kpiEl) kpiEl.innerHTML = `
     <div class="usd-stat-card"><div class="usd-stat-label">Promedio $ por dia</div><div class="usd-stat-value">${fmtUSD(promedioUSD)}</div><div class="usd-stat-sub">${diasConUSD.length} dias convertidos</div></div>
     <div class="usd-stat-card"><div class="usd-stat-label">Este mes</div><div class="usd-stat-value">${fmtUSD(mesActualUSD)}</div><div class="usd-stat-sub" style="${varColor}">${varStr || 'primer mes'}</div></div>
-    <div class="usd-stat-card"><div class="usd-stat-label">Prom. este mes/dia</div><div class="usd-stat-value">${fmtUSDDec(promMesUSD)}</div><div class="usd-stat-sub">${diasMesActual} dias</div></div>
+    <div class="usd-stat-card"><div class="usd-stat-label">Prom. este mes/dia</div><div class="usd-stat-value">${fmtUSD(promMesUSD)}</div><div class="usd-stat-sub">${diasMesActual} dias</div></div>
     <div class="usd-stat-card"><div class="usd-stat-label">Mejor dia USD</div><div class="usd-stat-value">${fmtUSD(maxUSD)}</div></div>
     <div class="usd-stat-card"><div class="usd-stat-label">Total historico</div><div class="usd-stat-value">${fmtUSD(totalUSD)}</div><div class="usd-stat-sub">${diasConUSD.length} dias</div></div>
     ${errores.length > 0 ? `<div class="usd-stat-card" style="border-color:rgba(248,113,113,.2)"><div class="usd-stat-label" style="color:var(--red)">Sin cotizacion</div><div class="usd-stat-value" style="color:var(--red);font-size:16px">${errores.length} dias</div><div class="usd-stat-sub">${errores.slice(0,3).map(f=>fmtD(f)).join(', ')}${errores.length>3?'...':''}</div></div>` : ''}
   `;
-
-  // ── Tendencia mensual USD ──
   const meses = [];
   for (let i = 5; i >= 0; i--) {
-    const dm = new Date(TODAY); dm.setDate(1); dm.setMonth(dm.getMonth() - i);
+    const dm = new Date(TODAY);dm.setDate(1);dm.setMonth(dm.getMonth() - i);
     const key = dm.toISOString().slice(0, 7);
     const label = dm.toLocaleDateString('es-AR', { month: 'short' });
     const tot = diasConUSD.filter(([f]) => f.startsWith(key)).reduce((a, [,v]) => a + v, 0);
@@ -878,7 +808,6 @@ async function renderUSDPanel() {
   }
   const maxMesUSD = Math.max(...meses.map(m => m.total), 1);
   const maxPromMesUSD = Math.max(...meses.map(m => m.diasM > 0 ? m.total / m.diasM : 0), 1);
-
   const usdTrendEl = document.getElementById('usd-trend-chart');
   const usdTrendLabels = document.getElementById('usd-trend-labels');
   if (usdTrendEl) {
@@ -890,7 +819,6 @@ async function renderUSDPanel() {
   if (usdTrendLabels) {
     usdTrendLabels.innerHTML = meses.map(m => `<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent ? 'var(--teal)' : 'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
   }
-
   const usdPromEl = document.getElementById('usd-prom-chart');
   const usdPromLabels = document.getElementById('usd-prom-labels');
   if (usdPromEl) {
@@ -903,8 +831,6 @@ async function renderUSDPanel() {
   if (usdPromLabels) {
     usdPromLabels.innerHTML = meses.map(m => `<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent ? 'var(--teal)' : 'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
   }
-
-  // ── Top 5 dias USD ──
   const top5 = [...diasConUSD].sort((a, b) => b[1] - a[1]).slice(0, 5);
   const medals = ['🥇', '🥈', '🥉'];
   if (topEl) {
@@ -918,8 +844,6 @@ async function renderUSDPanel() {
       </div>`;
     }).join('');
   }
-
-  // ── Lista de cotizaciones usadas ──
   if (cotizFuenteEl) cotizFuenteEl.textContent = `— dólar ${tipo}`;
   if (cotizListEl) {
     const cotizRows = [...new Set(ventas.map(v => v.fecha))].sort((a, b) => b.localeCompare(a)).map(fecha => {
@@ -927,7 +851,6 @@ async function renderUSDPanel() {
       const cotiz = cotizCache[cacheKey];
       if (!cotiz) return `<div class="list-row"><div class="main-info"><strong>${fmtFecha(fecha)}</strong></div><span style="font-family:var(--mono);font-size:12px;color:var(--red)">Sin datos</span></div>`;
       const fallbackStr = cotiz.fallback_dias > 0 ? `<span class="badge orange" style="margin-left:6px">↩ -${cotiz.fallback_dias}d</span>` : '';
-      const fromCache = '<span class="badge blue" style="margin-left:6px">cache</span>';
       return `<div class="list-row">
         <div class="main-info">
           <strong>${fmtFecha(fecha)}</strong>
@@ -944,20 +867,14 @@ async function renderUSDPanel() {
   }
 }
 
-// ══ Enriquecer historial de ventas con USD ══
 async function enrichVentasConUSD() {
   const tipo = getTipoDolar();
   const fechas = [...new Set(state.ventas.map(v => v.fecha))];
   if (!fechas.length) return;
-
   const statusEl = document.getElementById('usd-ventas-status');
   if (statusEl) { statusEl.style.display = ''; statusEl.textContent = 'cargando USD...'; }
-
   await precargarCotizaciones(fechas, tipo);
-
   if (statusEl) statusEl.style.display = 'none';
-
-  // Re-renderizar solo la lista de ventas para agregar columna USD
   renderVentasConUSD();
 }
 
@@ -974,9 +891,7 @@ function renderVentasConUSD() {
   const diasOrdenados = Object.keys(byDia).sort((a, b) => b.localeCompare(a));
   const list = document.getElementById('ventas-list');
   if (!diasOrdenados.length) { list.innerHTML = '<div class="empty">// sin ventas registradas</div>'; return; }
-
   const fmtUSD = n => n == null ? '' : 'U$S ' + Math.round(n).toLocaleString('es-AR');
-
   list.innerHTML = diasOrdenados.map(fecha => {
     const dia = byDia[fecha];
     const cacheKey = `${tipo}:${fecha.replace(/-/g, '/')}`;
@@ -1025,12 +940,13 @@ document.addEventListener('keydown',function(e){
 });
 
 // ══ COMISIONES ══
+// FIX 1: prepaga bolsillo → banco (no a_liquidar)
 const COMISIONES={
   none:{label:'Efectivo',rate:0,bolsillo:'efectivo'},
   transferencia:{label:'Transferencia',rate:0,bolsillo:'banco'},
   qr:{label:'QR (MP)',rate:0.0080,bolsillo:'banco'},
   debito:{label:'Debito',rate:0.0340,bolsillo:'banco'},
-  prepaga:{label:'Prepaga',rate:0.0393,bolsillo:'a_liquidar'},
+  prepaga:{label:'Prepaga',rate:0.0393,bolsillo:'banco'},       // antes era a_liquidar
   credito:{label:'Credito',rate:0.0660,bolsillo:'a_liquidar'},
 };
 const IVA=0.21;
@@ -1150,6 +1066,20 @@ async function confirmarLiquidar(){
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
+// ══ FIX 4: Liquidar parcial desde el banner de resumen ══
+async function liquidarParcialDesdeResumen(){
+  const input=document.getElementById('liq-resumen-monto');
+  if(!input)return;
+  const monto=parseFloat(input.value);
+  if(isNaN(monto)||monto<=0){toast('Ingresa un monto valido','error');return;}
+  if(monto>state.a_liquidar+0.01){toast('No tenes suficiente en A liquidar','error');return;}
+  state.a_liquidar=Math.max(0,state.a_liquidar-monto);
+  state.banco+=monto;
+  renderAll();setSyncStatus('loading');
+  try{await saveEstado();setSyncStatus('ok');toast(`Liquidado ${fmt(monto)} a Banco/MP`);}
+  catch(e){setSyncStatus('error');toast('Error al guardar','error');}
+}
+
 // ══ LOAD / SAVE ══
 async function loadAll(){
   setSyncStatus('loading');
@@ -1171,7 +1101,6 @@ async function loadAll(){
     state.gastosFijos=(fijos||[]).map(g=>({id:g.id,desc:g.descripcion||'',monto:Number(g.monto||0),cat:g.cat,dia:g.dia}));
     setSyncStatus('ok');document.getElementById('loading').style.display='none';
     renderAll();
-    // Precargar cotizaciones en segundo plano para las ventas visibles
     enrichVentasConUSD();
   }catch(e){
     setSyncStatus('error');document.getElementById('loading').style.display='none';
@@ -1187,7 +1116,6 @@ function goTo(name,el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   el.classList.add('active');renderAll();
-  // Si volvemos a ventas, intentamos mostrar USD si ya hay cache
   if(name==='ventas') renderVentasConUSD();
 }
 
@@ -1226,16 +1154,24 @@ function renderResumen(){
     const d=diasHasta(b.vence);const txt=d<0?`Vencida hace ${Math.abs(d)} dias`:d===0?'Vence hoy':`Vence en ${d} dias`;
     return `<div class="alert ${d<=0?'danger':'warning'}"><span><strong>${b.prov}</strong> - ${fmt(b.monto)}</span><span>${txt}</span></div>`;
   }).join('');
+
+  // FIX 4: Banner "A liquidar" con input de monto parcial
   let liqBox='';
   if(state.a_liquidar>0){
     liqBox=`<div class="liquidar-box">
       <div class="liq-title">💳 A liquidar — el banco te va a acreditar</div>
       <div class="liq-amount">${fmt(state.a_liquidar)}</div>
-      <div class="liq-sub">Cuando te transfieran el cobro de tarjeta, movi el dinero a Banco/MP</div>
-      <button class="btn-purple-sm" onclick="abrirModalLiquidar()">Liquidar ahora</button>
+      <div class="liq-sub">Cuando te transfieran el cobro de tarjeta, ingresa el monto que te acreditaron y movelo a Banco/MP</div>
+      <div class="liquidar-inline">
+        <input type="number" id="liq-resumen-monto" placeholder="${Math.round(state.a_liquidar)}" style="width:160px">
+        <button class="btn-purple-sm" onclick="liquidarParcialDesdeResumen()">Liquidar</button>
+        <span class="liq-note">o</span>
+        <button class="btn-purple-sm" onclick="abrirModalLiquidar()">Monto completo</button>
+      </div>
     </div>`;
   }
   document.getElementById('alertas-wrap').innerHTML+=liqBox;
+
   document.getElementById('saldo-breakdown').innerHTML=`
     <div class="saldo-pocket"><div class="pocket-label">💵 EFECTIVO</div><div class="pocket-value green">${fmt(state.efectivo)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('efectivo')">Editar</button></div>
     <div class="saldo-pocket"><div class="pocket-label">🏦 BANCO / MP</div><div class="pocket-value blue">${fmt(state.banco)}</div><button class="btn-edit-sm pocket-edit" onclick="abrirModalSaldo('banco')">Editar</button></div>
@@ -1283,15 +1219,73 @@ function renderVentas(){
     <div class="metric-card"><div class="metric-label">COMISIONES</div><div class="metric-value red">${fmt(totalCom)}</div></div>
     <div class="metric-card"><div class="metric-label">ESTE MES</div><div class="metric-value green">${fmt(mes)}</div></div>
   `;
-  // Renderizar historial (con USD si hay cache disponible)
   renderVentasConUSD();
+}
+
+// ══ FIX 3: Promedio acumulado al dia X ══
+function renderPromedioAlDia(){
+  const el=document.getElementById('promdia-result');
+  if(!el)return;
+  const diaX=parseInt(document.getElementById('promdia-input').value)||20;
+  if(diaX<1||diaX>31){el.innerHTML='<span style="color:var(--red);font-family:var(--mono);font-size:12px">Dia entre 1 y 31</span>';return;}
+
+  // Agrupar ventas por mes
+  const byMes={};
+  for(const v of state.ventas){
+    const mesKey=v.fecha.slice(0,7); // "YYYY-MM"
+    if(!byMes[mesKey])byMes[mesKey]={ventas:[]};
+    byMes[mesKey].ventas.push(v);
+  }
+  const mesKeys=Object.keys(byMes).sort();
+  if(!mesKeys.length){el.innerHTML='<div class="empty">// sin datos</div>';return;}
+
+  // Para cada mes calcular acumulado hasta dia X
+  const rows=mesKeys.map(mesKey=>{
+    const[y,m]=mesKey.split('-');
+    // Solo sumar ventas cuyo dia <= diaX
+    const ventasMes=byMes[mesKey].ventas.filter(v=>{
+      const dia=parseInt(v.fecha.split('-')[2]);
+      return dia<=diaX;
+    });
+    const totalAcum=ventasMes.reduce((a,b)=>a+b.monto,0);
+    const diasConVentas=[...new Set(ventasMes.map(v=>v.fecha))].length;
+    // Verificar si ese mes ya superó el dia X (para marcar como completo o en curso)
+    const hoyMes=TODAY.slice(0,7);
+    const hoyDia=parseInt(TODAY.split('-')[2]);
+    const enCurso=mesKey===hoyMes&&hoyDia<diaX;
+    const label=new Date(mesKey+'-01T12:00:00').toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+    return{label,totalAcum,diasConVentas,enCurso,mesKey};
+  });
+
+  // Calcular promedio entre meses completos
+  const mesesCompletos=rows.filter(r=>!r.enCurso);
+  const promTotal=mesesCompletos.length>0?mesesCompletos.reduce((a,b)=>a+b.totalAcum,0)/mesesCompletos.length:0;
+
+  const maxAcum=Math.max(...rows.map(r=>r.totalAcum),1);
+
+  el.innerHTML=`
+    <div style="margin-bottom:12px;font-family:var(--mono);font-size:12px;color:var(--text3)">
+      Promedio de meses completos: <span style="color:var(--accent);font-size:14px">${fmt(promTotal)}</span>
+      <span style="margin-left:8px">(${mesesCompletos.length} meses)</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${rows.map(r=>{
+        const pct=Math.round(r.totalAcum/maxAcum*100);
+        return `<div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);margin-bottom:3px;">
+            <span style="color:${r.enCurso?'var(--yellow)':'var(--text2)'}">${r.label}${r.enCurso?' (en curso)':''}</span>
+            <span style="color:${r.enCurso?'var(--yellow)':'var(--green)'}">${fmt(r.totalAcum)} <span style="color:var(--text3)">${r.diasConVentas}d con ventas</span></span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${r.enCurso?'var(--yellow)':'var(--accent)'}"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
 }
 
 // ══ ESTADÍSTICAS ══
 function renderEstadisticas(){
-  // Solo renderizar el panel activo
-  if (statTabActivo === 'usd') { renderUSDPanel(); return; }
-
+  if(statTabActivo==='usd'){renderUSDPanel();return;}
   const ventas=state.ventas;
   if(!ventas.length){
     ['stats-kpi','dow-chart','trend-chart','dow-ranking','top-dias-monto','top-dias-cantidad','cobro-dist'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<div class="empty">// sin datos</div>';});
@@ -1337,16 +1331,18 @@ function renderEstadisticas(){
     <div class="stat-card"><div class="stat-label">Total general</div><div class="stat-value">${fmt(totalGeneral)}</div><div class="stat-sub">${fechas.length} dias</div></div>
   `;
 
-  // DOW chart
+  // FIX 2: DOW chart — excluir domingo (index 0)
   const dowTotales=Array(7).fill(0),dowConteos=Array(7).fill(0),dowCantidades=Array(7).fill(0);
   for(const f of fechas){const dow=new Date(f+'T12:00:00').getDay();dowTotales[dow]+=byDia[f].total;dowConteos[dow]++;dowCantidades[dow]+=byDia[f].cantidad;}
   const dowPromedios=dowTotales.map((t,i)=>dowConteos[i]>0?t/dowConteos[i]:0);
   const dowPromCant=dowCantidades.map((c,i)=>dowConteos[i]>0?(c/dowConteos[i]):0);
-  const maxDOW=Math.max(...dowPromedios,1);
-  const bestDOW=dowPromedios.indexOf(Math.max(...dowPromedios));
-  document.getElementById('dow-chart').innerHTML=DOW_NAMES.map((name,i)=>{
+  // Excluir domingo (índice 0): solo mostrar Lun(1)..Sab(6)
+  const DOW_WORK=[1,2,3,4,5,6];
+  const maxDOW=Math.max(...DOW_WORK.map(i=>dowPromedios[i]),1);
+  const bestDOW=DOW_WORK.reduce((best,i)=>dowPromedios[i]>dowPromedios[best]?i:best,1);
+  document.getElementById('dow-chart').innerHTML=DOW_WORK.map(i=>{
     const h=Math.round(dowPromedios[i]/maxDOW*80);const isBest=i===bestDOW;
-    return `<div class="dow-col"><div class="dow-val">${dowPromedios[i]>0?'$'+Math.round(dowPromedios[i]/1000)+'k':''}</div><div class="dow-bar ${isBest?'best':'normal'}" style="height:${h}px"></div><div class="dow-label" style="${isBest?'color:var(--accent)':''}">${name}</div></div>`;
+    return `<div class="dow-col"><div class="dow-val">${dowPromedios[i]>0?'$'+Math.round(dowPromedios[i]/1000)+'k':''}</div><div class="dow-bar ${isBest?'best':'normal'}" style="height:${h}px"></div><div class="dow-label" style="${isBest?'color:var(--accent)':''}">${DOW_NAMES[i]}</div></div>`;
   }).join('');
 
   // Trend chart
@@ -1365,12 +1361,15 @@ function renderEstadisticas(){
   }).join('');
   document.getElementById('trend-labels').innerHTML=meses.map(m=>`<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent?'var(--accent)':'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
 
-  // ── SCATTER ──
+  // Promedio al dia X
+  renderPromedioAlDia();
+
+  // Scatter
   renderScatter(fechas,byDia);
 
-  // Ranking DOW
+  // FIX 2: Ranking DOW — excluir domingo también
   const medals=['🥇','🥈','🥉'];
-  const dowRanking=[...dowPromedios.map((v,i)=>({i,v,name:DOW_NAMES[i],conteo:dowConteos[i],promCant:dowPromCant[i]}))].sort((a,b)=>b.v-a.v);
+  const dowRanking=DOW_WORK.map(i=>({i,v:dowPromedios[i],name:DOW_NAMES[i],conteo:dowConteos[i],promCant:dowPromCant[i]})).sort((a,b)=>b.v-a.v);
   document.getElementById('dow-ranking').innerHTML=dowRanking.map((d,rank)=>`
     <div class="list-row">
       <div class="main-info"><strong>${medals[rank]||`${rank+1}.`} ${d.name}</strong><span class="sub">${d.conteo} ${d.conteo===1?'dia':'dias'} · prom. ${d.promCant>0?d.promCant.toFixed(1)+' v/dia':'sin cant.'}</span></div>
@@ -1513,7 +1512,6 @@ async function confirmarVenta(cobro,tipoCobro){
   const id=state.nextId++;state[cobro]+=neto;state.ventas.unshift({id,fecha,monto,nota,cobro,tipoCobro,comision,cantidad});
   document.getElementById('v-monto').value='';document.getElementById('v-nota').value='';document.getElementById('v-cantidad').value='';document.getElementById('comision-preview').className='comision-box';
   renderAll();setSyncStatus('loading');
-  // Actualizar cotización de la nueva fecha
   enrichVentasConUSD();
   try{await Promise.all([sb.from('ventas').insert({id,fecha,monto,nota,cobro,tipo_cobro:tipoCobro,comision,cantidad}),saveEstado()]);setSyncStatus('ok');toast('Venta registrada');}
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
