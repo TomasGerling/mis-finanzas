@@ -377,14 +377,20 @@
       <input type="number" id="modal-fijo-pago-monto" placeholder="0">
     </div>
     <div class="form-full">
-      <label class="form-label">Pagar con</label>
-      <div style="display:flex;gap:8px;">
-        <button class="btn" id="fijo-pago-btn-efectivo" onclick="setFijoPagoBolsillo('efectivo')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;">
+      <label class="form-label">Como pagaste</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn" id="fijo-pago-btn-efectivo" onclick="setFijoPagoBolsillo('efectivo')" style="flex:1;min-width:120px;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;">
           <span>💵</span><span>Efectivo</span>
         </button>
-        <button class="btn" id="fijo-pago-btn-banco" onclick="setFijoPagoBolsillo('banco')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;">
+        <button class="btn" id="fijo-pago-btn-banco" onclick="setFijoPagoBolsillo('banco')" style="flex:1;min-width:120px;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;">
           <span>🏦</span><span>Banco / MP</span>
         </button>
+        <button class="btn" id="fijo-pago-btn-ya_pagado" onclick="setFijoPagoBolsillo('ya_pagado')" style="flex:1;min-width:140px;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;">
+          <span>✓</span><span>Ya lo pagué</span>
+        </button>
+      </div>
+      <div id="fijo-ya-pagado-aviso" style="display:none;margin-top:8px;background:var(--yellow-bg);border:1px solid rgba(251,191,36,.2);border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;font-family:var(--mono);color:var(--yellow);">
+        Solo registra el pago en el historial — no descuenta del saldo (ya lo hiciste antes)
       </div>
       <div style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-top:8px;" id="fijo-pago-saldos"></div>
     </div>
@@ -1220,10 +1226,14 @@ function setFijoPagoBolsillo(bolsillo) {
 function actualizarFijoPagoBolsillo(bolsillo) {
   const btnE = document.getElementById('fijo-pago-btn-efectivo');
   const btnB = document.getElementById('fijo-pago-btn-banco');
+  const btnY = document.getElementById('fijo-pago-btn-ya_pagado');
+  const aviso = document.getElementById('fijo-ya-pagado-aviso');
   if (btnE) { btnE.style.background = bolsillo === 'efectivo' ? 'var(--green-bg)' : ''; btnE.style.borderColor = bolsillo === 'efectivo' ? 'rgba(74,222,128,.4)' : ''; btnE.style.color = bolsillo === 'efectivo' ? 'var(--green)' : ''; }
   if (btnB) { btnB.style.background = bolsillo === 'banco' ? 'var(--blue-bg)' : ''; btnB.style.borderColor = bolsillo === 'banco' ? 'rgba(96,165,250,.4)' : ''; btnB.style.color = bolsillo === 'banco' ? 'var(--blue)' : ''; }
+  if (btnY) { btnY.style.background = bolsillo === 'ya_pagado' ? 'var(--yellow-bg)' : ''; btnY.style.borderColor = bolsillo === 'ya_pagado' ? 'rgba(251,191,36,.4)' : ''; btnY.style.color = bolsillo === 'ya_pagado' ? 'var(--yellow)' : ''; }
+  if (aviso) aviso.style.display = bolsillo === 'ya_pagado' ? 'block' : 'none';
   const saldosEl = document.getElementById('fijo-pago-saldos');
-  if (saldosEl) saldosEl.textContent = `💵 Efectivo: ${fmt(state.efectivo)}   🏦 Banco/MP: ${fmt(state.banco)}`;
+  if (saldosEl) saldosEl.textContent = bolsillo === 'ya_pagado' ? '' : `💵 Efectivo: ${fmt(state.efectivo)}   🏦 Banco/MP: ${fmt(state.banco)}`;
 }
 
 function cerrarModalFijoPago() {
@@ -1237,8 +1247,10 @@ async function confirmarFijoPago() {
   const monto = parseFloat(document.getElementById('modal-fijo-pago-monto').value);
   if (isNaN(monto) || monto <= 0) { toast('Ingresa un monto valido', 'error'); return; }
 
-  // Descontar del saldo
-  state[fijoPagoBolsillo] -= monto;
+  // Solo descontar del saldo si NO es "ya_pagado"
+  if (fijoPagoBolsillo !== 'ya_pagado') {
+    state[fijoPagoBolsillo] -= monto;
+  }
 
   // Registrar pago en el historial del gasto fijo
   if (!g.pagos) g.pagos = [];
@@ -1250,10 +1262,9 @@ async function confirmarFijoPago() {
   setSyncStatus('loading');
 
   try {
-    await Promise.all([
-      sb.from('gastos_fijos').update({ pagos: g.pagos }).eq('id', g.id),
-      saveEstado()
-    ]);
+    const ops = [sb.from('gastos_fijos').update({ pagos: g.pagos }).eq('id', g.id)];
+    if (fijoPagoBolsillo !== 'ya_pagado') ops.push(saveEstado());
+    await Promise.all(ops);
     setSyncStatus('ok');
     const pagadoTotal = g.pagos.reduce((a, p) => a + p.monto, 0);
     const falta = (g.monto || 0) - pagadoTotal;
@@ -1786,7 +1797,7 @@ function renderFijos(){
       <div class="fijo-pagos-list">
         ${g.pagos.map(p=>`
           <div class="fijo-pago-row">
-            <span class="fp-medio">${p.bolsillo==='banco'?'🏦 Banco/MP':'💵 Efectivo'} · ${fmtD(p.fecha||TODAY)}</span>
+            <span class="fp-medio">${p.bolsillo==='banco'?'🏦 Banco/MP':p.bolsillo==='ya_pagado'?'✓ Ya pagado':'💵 Efectivo'} · ${fmtD(p.fecha||TODAY)}</span>
             <span class="fp-monto">${fmt(p.monto)}</span>
           </div>
         `).join('')}
