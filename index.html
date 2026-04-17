@@ -191,6 +191,14 @@
   .promdia-controls input[type=number]{width:80px;text-align:center;}
   .promdia-result{font-family:var(--mono);font-size:13px;color:var(--text2);}
 
+  /* CANTIDAD POR MES — NUEVO GRÁFICO */
+  .cant-mes-chart{display:flex;align-items:flex-end;gap:6px;height:100px;margin-top:4px;}
+  .cant-mes-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
+  .cant-mes-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px;background:var(--blue);opacity:0.6;transition:height .5s ease;}
+  .cant-mes-bar.current{background:var(--blue);opacity:1;}
+  .cant-mes-val{font-size:9px;color:var(--text2);font-family:var(--mono);}
+  .cant-mes-label{font-size:9px;color:var(--text3);font-family:var(--mono);}
+
   /* LIQUIDAR TARJETA */
   .liquidar-box{background:var(--purple-bg);border:1px solid rgba(167,139,250,.2);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
   .liquidar-box .liq-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);font-family:var(--mono);margin-bottom:8px;}
@@ -510,7 +518,8 @@
           <div><label class="form-label">Monto bruto ($)</label><input type="number" id="v-monto" placeholder="95000" oninput="actualizarComision()"></div>
         </div>
         <div class="form-grid">
-          <div><label class="form-label">Cantidad de ventas</label><input type="number" id="v-cantidad" placeholder="12" min="0"></div>
+          <!-- ★ CAMBIO 1: value="1" como predeterminado -->
+          <div><label class="form-label">Cantidad de ventas</label><input type="number" id="v-cantidad" placeholder="1" min="0" value="1"></div>
           <div><label class="form-label">Nota</label><input type="text" id="v-nota" placeholder="Ej: buen sabado..."></div>
         </div>
         <div class="comision-box" id="comision-preview"></div>
@@ -556,6 +565,15 @@
             <div id="trend-labels" style="display:flex;gap:4px;margin-top:6px;"></div>
           </div>
         </div>
+
+        <!-- ★ CAMBIO 2: Nuevo gráfico — Cantidad de ventas por mes -->
+        <div class="card">
+          <div class="card-title">Cantidad de ventas por mes <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— ultimos 6 meses</span></div>
+          <div class="cant-mes-chart" id="cant-mes-chart"></div>
+          <div id="cant-mes-labels" style="display:flex;gap:6px;margin-top:6px;"></div>
+          <div id="cant-mes-stats" style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;"></div>
+        </div>
+
         <div class="card">
           <div class="card-title">Dispersion — cantidad de ventas vs monto del dia <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">cada punto = un dia</span></div>
           <div class="scatter-wrap" id="scatter-wrap">
@@ -1066,10 +1084,9 @@ function comisionHTML(monto,tipo){
 // ══ STATE ══
 let state={efectivo:0,banco:0,a_liquidar:0,nextId:2000,ventas:[],gastosDiarios:[],boletas:[],gastosFijos:[]};
 let ventaPendiente=null,editSaldoKey=null,boletaPendientePago=null;
-// Estado para gastos fijos
-let fijoAccionId=null;    // id del gasto fijo que se está pagando/editando
-let fijoPagoBolsillo='banco'; // medio de pago seleccionado
-let fijoResetId=null;     // id para resetear pagos
+let fijoAccionId=null;
+let fijoPagoBolsillo='banco';
+let fijoResetId=null;
 
 const TODAY=new Date().toISOString().split('T')[0];
 function saldoTotal(){return state.efectivo+state.banco+state.a_liquidar;}
@@ -1165,7 +1182,6 @@ async function confirmarLiquidar(){
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-// ══ LIQUIDAR PARCIAL DESDE RESUMEN ══
 async function liquidarParcialDesdeResumen(){
   const input=document.getElementById('liq-resumen-monto');
   if(!input)return;
@@ -1179,30 +1195,21 @@ async function liquidarParcialDesdeResumen(){
   catch(e){setSyncStatus('error');toast('Error al guardar','error');}
 }
 
-// ══════════════════════════════════════════
-// ══ GASTOS FIJOS — MODAL PAGO PARCIAL ════
-// ══════════════════════════════════════════
-
+// ══ GASTOS FIJOS — MODAL PAGO ══
 function abrirModalFijoPago(id) {
   const g = state.gastosFijos.find(x => x.id === id);
   if (!g) return;
   fijoAccionId = id;
   fijoPagoBolsillo = 'banco';
-
   const pagado = (g.pagos || []).reduce((a, p) => a + p.monto, 0);
   const falta = (g.monto || 0) - pagado;
-
   document.getElementById('modal-fijo-pago-title').textContent = `Registrar pago — ${g.desc}`;
   document.getElementById('modal-fijo-pago-sub').textContent =
     pagado > 0
       ? `Ya pagado: ${fmt(pagado)} de ${fmt(g.monto)} — falta ${fmt(Math.max(0, falta))}`
       : `Total del gasto: ${fmt(g.monto)}`;
-
-  // Poner por defecto lo que falta (o el total si no pagó nada)
   const sugerido = Math.max(0, falta);
   document.getElementById('modal-fijo-pago-monto').value = sugerido > 0 ? Math.round(sugerido) : Math.round(g.monto || 0);
-
-  // Info restante
   const infoEl = document.getElementById('fijo-pago-restante-info');
   if (pagado > 0 && g.monto > 0) {
     infoEl.style.display = 'block';
@@ -1212,7 +1219,6 @@ function abrirModalFijoPago(id) {
   } else {
     infoEl.style.display = 'none';
   }
-
   actualizarFijoPagoBolsillo('banco');
   document.getElementById('modal-fijo-pago').classList.add('open');
   setTimeout(() => document.getElementById('modal-fijo-pago-monto').focus(), 100);
@@ -1246,21 +1252,15 @@ async function confirmarFijoPago() {
   if (!g) return;
   const monto = parseFloat(document.getElementById('modal-fijo-pago-monto').value);
   if (isNaN(monto) || monto <= 0) { toast('Ingresa un monto valido', 'error'); return; }
-
-  // Solo descontar del saldo si NO es "ya_pagado"
   if (fijoPagoBolsillo !== 'ya_pagado') {
     state[fijoPagoBolsillo] -= monto;
   }
-
-  // Registrar pago en el historial del gasto fijo
   if (!g.pagos) g.pagos = [];
   const nuevoPago = { monto, bolsillo: fijoPagoBolsillo, fecha: TODAY, id: state.nextId++ };
   g.pagos.push(nuevoPago);
-
   cerrarModalFijoPago();
   renderAll();
   setSyncStatus('loading');
-
   try {
     const ops = [sb.from('gastos_fijos').update({ pagos: g.pagos }).eq('id', g.id)];
     if (fijoPagoBolsillo !== 'ya_pagado') ops.push(saveEstado());
@@ -1279,7 +1279,6 @@ async function confirmarFijoPago() {
   }
 }
 
-// ══ MODAL EDITAR GASTO FIJO ══
 function abrirModalEditarFijo(id) {
   const g = state.gastosFijos.find(x => x.id === id);
   if (!g) return;
@@ -1305,24 +1304,17 @@ async function confirmarEditarFijo() {
   const monto = parseFloat(document.getElementById('modal-fijo-editar-monto').value);
   const cat = document.getElementById('modal-fijo-editar-cat').value;
   const dia = parseInt(document.getElementById('modal-fijo-editar-dia').value) || null;
-
   if (!desc) { toast('Ingresa una descripcion', 'error'); return; }
-
   g.desc = desc;
   g.monto = isNaN(monto) ? 0 : monto;
   g.cat = cat;
   g.dia = dia;
-
   cerrarModalEditarFijo();
   renderAll();
   setSyncStatus('loading');
-
   try {
     await sb.from('gastos_fijos').update({
-      descripcion: g.desc,
-      monto: g.monto,
-      cat: g.cat,
-      dia: g.dia
+      descripcion: g.desc, monto: g.monto, cat: g.cat, dia: g.dia
     }).eq('id', g.id);
     setSyncStatus('ok');
     toast('Gasto fijo actualizado');
@@ -1332,7 +1324,6 @@ async function confirmarEditarFijo() {
   }
 }
 
-// ══ MODAL RESET PAGOS DEL MES ══
 function abrirModalResetFijo(id) {
   const g = state.gastosFijos.find(x => x.id === id);
   if (!g) return;
@@ -1382,14 +1373,9 @@ async function loadAll(){
     state.ventas=(ventas||[]).map(v=>({id:v.id,fecha:v.fecha,monto:Number(v.monto),nota:v.nota||'',cobro:v.cobro||'efectivo',tipoCobro:v.tipo_cobro||'none',comision:Number(v.comision||0),cantidad:Number(v.cantidad||0)}));
     state.gastosDiarios=(gd||[]).map(g=>({id:g.id,fecha:g.fecha,monto:Number(g.monto),cat:g.cat,desc:g.descripcion||'',pago:g.pago||'efectivo'}));
     state.boletas=(boletas||[]).map(b=>({id:b.id,prov:b.prov,monto:Number(b.monto),fechaBoleta:b.fecha_boleta,vence:b.vence,pagada:b.pagada}));
-    // Cargar gastos fijos con el campo pagos (array JSON)
     state.gastosFijos=(fijos||[]).map(g=>({
-      id:g.id,
-      desc:g.descripcion||'',
-      monto:Number(g.monto||0),
-      cat:g.cat,
-      dia:g.dia,
-      pagos: Array.isArray(g.pagos) ? g.pagos : []
+      id:g.id, desc:g.descripcion||'', monto:Number(g.monto||0),
+      cat:g.cat, dia:g.dia, pagos: Array.isArray(g.pagos) ? g.pagos : []
     }));
     setSyncStatus('ok');document.getElementById('loading').style.display='none';
     renderAll();
@@ -1513,7 +1499,6 @@ function renderVentas(){
   renderVentasConUSD();
 }
 
-// ══ FIX 3: Promedio acumulado al dia X ══
 function renderPromedioAlDia(){
   const el=document.getElementById('promdia-result');
   if(!el)return;
@@ -1563,12 +1548,86 @@ function renderPromedioAlDia(){
   `;
 }
 
+// ══════════════════════════════════════════
+// ★ CAMBIO 2: Gráfico cantidad de ventas por mes
+// ══════════════════════════════════════════
+function renderCantidadPorMes(ventas) {
+  const chartEl = document.getElementById('cant-mes-chart');
+  const labelsEl = document.getElementById('cant-mes-labels');
+  const statsEl = document.getElementById('cant-mes-stats');
+  if (!chartEl || !labelsEl || !statsEl) return;
+
+  // Armar datos de los últimos 6 meses
+  const meses = [];
+  for (let i = 5; i >= 0; i--) {
+    const dm = new Date(TODAY);
+    dm.setDate(1);
+    dm.setMonth(dm.getMonth() - i);
+    const key = dm.toISOString().slice(0, 7);
+    const label = dm.toLocaleDateString('es-AR', { month: 'short' });
+    const labelLargo = dm.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    // Cantidad total de ventas del mes (suma del campo cantidad)
+    const cantTotal = ventas
+      .filter(v => v.fecha.startsWith(key))
+      .reduce((a, b) => a + (b.cantidad || 0), 0);
+    // Días con ventas registradas ese mes
+    const diasConV = [...new Set(ventas.filter(v => v.fecha.startsWith(key)).map(v => v.fecha))].length;
+    meses.push({ key, label, labelLargo, cantTotal, diasConV, isCurrent: i === 0 });
+  }
+
+  const maxCant = Math.max(...meses.map(m => m.cantTotal), 1);
+  const totalHistorico = meses.reduce((a, m) => a + m.cantTotal, 0);
+  const mesesConDatos = meses.filter(m => m.cantTotal > 0);
+  const promMensual = mesesConDatos.length > 0 ? Math.round(totalHistorico / mesesConDatos.length) : 0;
+  const mejorMes = meses.reduce((best, m) => m.cantTotal > best.cantTotal ? m : best, meses[0]);
+
+  // Barras
+  chartEl.innerHTML = meses.map(m => {
+    const h = Math.round(m.cantTotal / maxCant * 84);
+    return `<div class="cant-mes-col">
+      <div class="cant-mes-val">${m.cantTotal > 0 ? m.cantTotal : ''}</div>
+      <div class="cant-mes-bar ${m.isCurrent ? 'current' : ''}" style="height:${Math.max(h, m.cantTotal > 0 ? 4 : 0)}px" title="${m.labelLargo}: ${m.cantTotal} ventas"></div>
+    </div>`;
+  }).join('');
+
+  // Labels de mes
+  labelsEl.innerHTML = meses.map(m => `
+    <div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent ? 'var(--blue)' : 'var(--text3)'};font-family:var(--mono);font-weight:${m.isCurrent?'600':'400'}">${m.label}</div>
+  `).join('');
+
+  // Stats debajo
+  const mesActual = meses.find(m => m.isCurrent);
+  const mesAnterior = meses[meses.length - 2];
+  const varMes = (mesAnterior && mesAnterior.cantTotal > 0 && mesActual)
+    ? Math.round((mesActual.cantTotal - mesAnterior.cantTotal) / mesAnterior.cantTotal * 100)
+    : null;
+  const varStr = varMes !== null
+    ? `<span style="color:${varMes >= 0 ? 'var(--green)' : 'var(--red)'};font-size:10px;font-family:var(--mono)">${varMes >= 0 ? '▲' : '▼'} ${Math.abs(varMes)}% vs mes ant.</span>`
+    : '';
+
+  statsEl.innerHTML = `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--mono);font-size:12px;">
+      <span style="color:var(--text3)">Este mes: </span>
+      <span style="color:var(--blue);font-weight:500">${mesActual ? mesActual.cantTotal : 0} ventas</span>
+      ${varStr ? '&nbsp;&nbsp;' + varStr : ''}
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--mono);font-size:12px;">
+      <span style="color:var(--text3)">Prom. mensual: </span>
+      <span style="color:var(--text)">${promMensual} ventas</span>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--mono);font-size:12px;">
+      <span style="color:var(--text3)">Mejor mes: </span>
+      <span style="color:var(--blue);font-weight:500">${mejorMes && mejorMes.cantTotal > 0 ? mejorMes.cantTotal + ' (' + mejorMes.label + ')' : '---'}</span>
+    </div>
+  `;
+}
+
 // ══ ESTADÍSTICAS ══
 function renderEstadisticas(){
   if(statTabActivo==='usd'){renderUSDPanel();return;}
   const ventas=state.ventas;
   if(!ventas.length){
-    ['stats-kpi','dow-chart','trend-chart','dow-ranking','top-dias-monto','top-dias-cantidad','cobro-dist'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<div class="empty">// sin datos</div>';});
+    ['stats-kpi','dow-chart','trend-chart','dow-ranking','top-dias-monto','top-dias-cantidad','cobro-dist','cant-mes-chart'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<div class="empty">// sin datos</div>';});
     return;
   }
   const byDia={};
@@ -1639,6 +1698,10 @@ function renderEstadisticas(){
   document.getElementById('trend-labels').innerHTML=meses.map(m=>`<div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent?'var(--accent)':'var(--text3)'};font-family:var(--mono)">${m.label}</div>`).join('');
 
   renderPromedioAlDia();
+
+  // ★ Llamar al nuevo gráfico de cantidad por mes
+  renderCantidadPorMes(ventas);
+
   renderScatter(fechas,byDia);
 
   const medals=['🥇','🥈','🥉'];
@@ -1760,15 +1823,10 @@ function renderBoletas(){
   document.getElementById('boletas-pag').innerHTML=pag.length?pag.map(b=>`<div class="list-row paid"><div class="main-info"><strong>${b.prov}</strong><span class="sub">boleta ${fmtD(b.fechaBoleta)}</span></div><span class="amount-col">${fmt(b.monto)}</span></div>`).join(''):'<div class="empty">// ninguna todavia</div>';
 }
 
-// ══════════════════════════════════════
-// ══ RENDER GASTOS FIJOS (mejorado) ════
-// ══════════════════════════════════════
 function renderFijos(){
   const total=state.gastosFijos.reduce((a,b)=>a+(b.monto||0),0);
   const neg=state.gastosFijos.filter(g=>g.cat==='negocio').reduce((a,b)=>a+(b.monto||0),0);
   const per=state.gastosFijos.filter(g=>g.cat!=='negocio').reduce((a,b)=>a+(b.monto||0),0);
-
-  // Total pagado este mes en gastos fijos (suma de todos los pagos registrados)
   const totalPagadoFijos = state.gastosFijos.reduce((a, g) => a + (g.pagos||[]).reduce((x,p)=>x+p.monto,0), 0);
 
   document.getElementById('metrics-fijos').innerHTML=`
@@ -1792,7 +1850,6 @@ function renderFijos(){
     const completo = falta <= 0 && pagado > 0;
     const parcial = pagado > 0 && !completo;
 
-    // Historial de pagos del periodo actual
     const pagosHTML = (g.pagos||[]).length > 0 ? `
       <div class="fijo-pagos-list">
         ${g.pagos.map(p=>`
@@ -1803,7 +1860,6 @@ function renderFijos(){
         `).join('')}
       </div>` : '';
 
-    // Barra de progreso si hay monto definido
     const barraHTML = g.monto > 0 ? `
       <div class="fijo-progress-wrap">
         <div class="fijo-progress-label">
@@ -1852,7 +1908,10 @@ async function confirmarVenta(cobro,tipoCobro){
   const{fecha,monto,nota,cantidad}=ventaPendiente;ventaPendiente=null;cerrarModalCobro();
   const{total:comision,neto}=calcComision(monto,tipoCobro);
   const id=state.nextId++;state[cobro]+=neto;state.ventas.unshift({id,fecha,monto,nota,cobro,tipoCobro,comision,cantidad});
-  document.getElementById('v-monto').value='';document.getElementById('v-nota').value='';document.getElementById('v-cantidad').value='';document.getElementById('comision-preview').className='comision-box';
+  document.getElementById('v-monto').value='';
+  document.getElementById('v-nota').value='';
+  document.getElementById('v-cantidad').value='1'; // ★ Resetea a 1 tras guardar
+  document.getElementById('comision-preview').className='comision-box';
   renderAll();setSyncStatus('loading');
   enrichVentasConUSD();
   try{await Promise.all([sb.from('ventas').insert({id,fecha,monto,nota,cobro,tipo_cobro:tipoCobro,comision,cantidad}),saveEstado()]);setSyncStatus('ok');toast('Venta registrada');}
