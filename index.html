@@ -1356,15 +1356,27 @@ async function confirmarResetFijo() {
 }
 
 // ══ LOAD / SAVE ══
+async function fetchAllVentas(){
+  const PAGE=1000;
+  let all=[],from=0,done=false;
+  while(!done){
+    const{data,error}=await sb.from('ventas').select('*').order('fecha',{ascending:false}).range(from,from+PAGE-1);
+    if(error)throw error;
+    if(data&&data.length>0)all=all.concat(data);
+    if(!data||data.length<PAGE)done=true;
+    else from+=PAGE;
+  }
+  return all;
+}
 async function loadAll(){
   setSyncStatus('loading');
   try{
-    const[{data:est},{data:ventas},{data:gd},{data:boletas},{data:fijos}]=await Promise.all([
+    const[{data:est},{data:gd},{data:boletas},{data:fijos},ventas]=await Promise.all([
       sb.from('estado').select('*').single(),
-      sb.from('ventas').select('*').order('fecha',{ascending:false}).limit(10000),
       sb.from('gastos_diarios').select('*').order('fecha',{ascending:false}),
       sb.from('boletas').select('*').order('vence'),
       sb.from('gastos_fijos').select('*').order('id'),
+      fetchAllVentas(),
     ]);
     state.efectivo=Number(est?.efectivo??120000);
     state.banco=Number(est?.banco??377281);
