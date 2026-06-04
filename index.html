@@ -566,11 +566,12 @@
           </div>
         </div>
 
-        <!-- Ventas por mes — tabla anual -->
+        <!-- ★ CAMBIO 2: Nuevo gráfico — Cantidad de ventas por mes -->
         <div class="card">
-          <div class="card-title">Ventas por mes <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— comparacion anual (sep → ago)</span></div>
-          <div id="anual-tabla"></div>
-          <div id="anual-totales" style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;"></div>
+          <div class="card-title">Cantidad de ventas por mes <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— ultimos 6 meses</span></div>
+          <div class="cant-mes-chart" id="cant-mes-chart"></div>
+          <div id="cant-mes-labels" style="display:flex;gap:6px;margin-top:6px;"></div>
+          <div id="cant-mes-stats" style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;"></div>
         </div>
 
         <div class="card">
@@ -1559,127 +1560,78 @@ function renderPromedioAlDia(){
   `;
 }
 
-// ══ TABLA ANUAL DE VENTAS (sep→ago) ══
-function renderTablaAnual(ventas) {
-  const tablaEl = document.getElementById('anual-tabla');
-  const totalesEl = document.getElementById('anual-totales');
-  if (!tablaEl) return;
+// ══════════════════════════════════════════
+// ★ CAMBIO 2: Gráfico cantidad de ventas por mes
+// ══════════════════════════════════════════
+function renderCantidadPorMes(ventas) {
+  const chartEl = document.getElementById('cant-mes-chart');
+  const labelsEl = document.getElementById('cant-mes-labels');
+  const statsEl = document.getElementById('cant-mes-stats');
+  if (!chartEl || !labelsEl || !statsEl) return;
 
-  const MESES_ORDEN = [
-    {num:'09',label:'Sep'},{num:'10',label:'Oct'},{num:'11',label:'Nov'},
-    {num:'12',label:'Dic'},{num:'01',label:'Ene'},{num:'02',label:'Feb'},
-    {num:'03',label:'Mar'},{num:'04',label:'Abr'},{num:'05',label:'May'},
-    {num:'06',label:'Jun'},{num:'07',label:'Jul'},{num:'08',label:'Ago'}
-  ];
-
-  // Detectar ciclos anuales presentes (sep-ago). Ej: ciclo "2024" = sep2024-ago2025
-  const fechasPresentes = [...new Set(ventas.map(v => v.fecha.slice(0,7)))];
-  const ciclosSet = new Set();
-  for (const ym of fechasPresentes) {
-    const [y, m] = ym.split('-').map(Number);
-    const ciclo = m >= 9 ? y : y - 1;
-    ciclosSet.add(ciclo);
-  }
-  const ciclos = [...ciclosSet].sort();
-  if (!ciclos.length) { tablaEl.innerHTML = '<div class="empty">// sin datos</div>'; return; }
-
-  // Para cada ciclo y mes calcular monto y cantidad
-  function getMesKey(ciclo, numMes) {
-    const m = parseInt(numMes);
-    const y = m >= 9 ? ciclo : ciclo + 1;
-    return `${y}-${numMes}`;
+  // Armar datos de los últimos 6 meses
+  const meses = [];
+  for (let i = 5; i >= 0; i--) {
+    const dm = new Date(TODAY);
+    dm.setDate(1);
+    dm.setMonth(dm.getMonth() - i);
+    const key = dm.toISOString().slice(0, 7);
+    const label = dm.toLocaleDateString('es-AR', { month: 'short' });
+    const labelLargo = dm.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    // Cantidad total de ventas del mes (suma del campo cantidad)
+    const cantTotal = ventas
+      .filter(v => v.fecha.startsWith(key))
+      .reduce((a, b) => a + (b.cantidad || 0), 0);
+    // Días con ventas registradas ese mes
+    const diasConV = [...new Set(ventas.filter(v => v.fecha.startsWith(key)).map(v => v.fecha))].length;
+    meses.push({ key, label, labelLargo, cantTotal, diasConV, isCurrent: i === 0 });
   }
 
-  // Totales por ciclo
-  const totCiclo = {};
-  for (const c of ciclos) {
-    let totalMonto = 0, totalCant = 0;
-    for (const mes of MESES_ORDEN) {
-      const key = getMesKey(c, mes.num);
-      const vMes = ventas.filter(v => v.fecha.startsWith(key));
-      totalMonto += vMes.reduce((a,b) => a + b.monto, 0);
-      totalCant += vMes.reduce((a,b) => a + (b.cantidad||0), 0);
-    }
-    totCiclo[c] = { totalMonto, totalCant };
-  }
+  const maxCant = Math.max(...meses.map(m => m.cantTotal), 1);
+  const totalHistorico = meses.reduce((a, m) => a + m.cantTotal, 0);
+  const mesesConDatos = meses.filter(m => m.cantTotal > 0);
+  const promMensual = mesesConDatos.length > 0 ? Math.round(totalHistorico / mesesConDatos.length) : 0;
+  const mejorMes = meses.reduce((best, m) => m.cantTotal > best.cantTotal ? m : best, meses[0]);
 
-  const hoyMes = TODAY.slice(0,7);
-  const fmtM = n => n > 0 ? ('$' + (n >= 1000000 ? (n/1000000).toFixed(1)+'M' : Math.round(n/1000)+'k')) : '-';
-
-  // Styles inline para la tabla
-  const thStyle = 'padding:8px 10px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;';
-  const thMesStyle = 'padding:8px 10px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);text-align:left;';
-  const tdStyle = 'padding:7px 10px;font-family:var(--mono);font-size:11px;text-align:right;border-bottom:1px solid var(--border);vertical-align:middle;';
-  const tdMesStyle = 'padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);font-weight:500;';
-
-  const headerCols = ciclos.map(c =>
-    `<th style="${thStyle}" colspan="2">${c}–${(c+1).toString().slice(2)}</th>`
-  ).join('');
-
-  const subHeaderCols = ciclos.map(() =>
-    `<th style="${thStyle}">$ monto</th><th style="${thStyle}">cant.</th>`
-  ).join('');
-
-  const rows = MESES_ORDEN.map(mes => {
-    const isActual = ciclos.some(c => getMesKey(c, mes.num) === hoyMes);
-    const rowBg = isActual ? 'background:rgba(232,255,90,0.05);' : '';
-    const mesLabel = `<td style="${tdMesStyle}${rowBg}">${isActual ? '<span style="color:var(--yellow)">' + mes.label + ' ●</span>' : mes.label}</td>`;
-
-    const cols = ciclos.map(c => {
-      const key = getMesKey(c, mes.num);
-      const vMes = ventas.filter(v => v.fecha.startsWith(key));
-      const monto = vMes.reduce((a,b) => a + b.monto, 0);
-      const cant = vMes.reduce((a,b) => a + (b.cantidad||0), 0);
-      const isCurrent = key === hoyMes;
-      const montoColor = isCurrent ? 'color:var(--yellow);' : monto > 0 ? 'color:var(--green);' : 'color:var(--text3);';
-      const cantColor = isCurrent ? 'color:var(--yellow);' : cant > 0 ? 'color:var(--blue);' : 'color:var(--text3);';
-      return `<td style="${tdStyle}${rowBg}${montoColor}">${fmtM(monto)}</td><td style="${tdStyle}${rowBg}${cantColor}">${cant > 0 ? cant : '-'}</td>`;
-    }).join('');
-
-    return `<tr>${mesLabel}${cols}</tr>`;
+  // Barras
+  chartEl.innerHTML = meses.map(m => {
+    const h = Math.round(m.cantTotal / maxCant * 84);
+    return `<div class="cant-mes-col">
+      <div class="cant-mes-val">${m.cantTotal > 0 ? m.cantTotal : ''}</div>
+      <div class="cant-mes-bar ${m.isCurrent ? 'current' : ''}" style="height:${Math.max(h, m.cantTotal > 0 ? 4 : 0)}px" title="${m.labelLargo}: ${m.cantTotal} ventas"></div>
+    </div>`;
   }).join('');
 
-  // Fila de totales
-  const totalRow = `<tr style="background:var(--bg3);">
-    <td style="${tdMesStyle}font-weight:700;color:var(--text);">TOTAL</td>
-    ${ciclos.map(c => {
-      const { totalMonto, totalCant } = totCiclo[c];
-      return `<td style="${tdStyle}font-weight:700;color:var(--accent);">${fmtM(totalMonto)}</td><td style="${tdStyle}font-weight:700;color:var(--accent);">${totalCant > 0 ? totalCant : '-'}</td>`;
-    }).join('')}
-  </tr>`;
+  // Labels de mes
+  labelsEl.innerHTML = meses.map(m => `
+    <div style="flex:1;text-align:center;font-size:9px;color:${m.isCurrent ? 'var(--blue)' : 'var(--text3)'};font-family:var(--mono);font-weight:${m.isCurrent?'600':'400'}">${m.label}</div>
+  `).join('');
 
-  tablaEl.innerHTML = `
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;min-width:320px;">
-        <thead>
-          <tr>
-            <th style="${thMesStyle}">Mes</th>
-            ${headerCols}
-          </tr>
-          <tr>
-            <th style="${thMesStyle}"></th>
-            ${subHeaderCols}
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-          ${totalRow}
-        </tbody>
-      </table>
+  // Stats debajo
+  const mesActual = meses.find(m => m.isCurrent);
+  const mesAnterior = meses[meses.length - 2];
+  const varMes = (mesAnterior && mesAnterior.cantTotal > 0 && mesActual)
+    ? Math.round((mesActual.cantTotal - mesAnterior.cantTotal) / mesAnterior.cantTotal * 100)
+    : null;
+  const varStr = varMes !== null
+    ? `<span style="color:${varMes >= 0 ? 'var(--green)' : 'var(--red)'};font-size:10px;font-family:var(--mono)">${varMes >= 0 ? '▲' : '▼'} ${Math.abs(varMes)}% vs mes ant.</span>`
+    : '';
+
+  statsEl.innerHTML = `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--mono);font-size:12px;">
+      <span style="color:var(--text3)">Este mes: </span>
+      <span style="color:var(--blue);font-weight:500">${mesActual ? mesActual.cantTotal : 0} ventas</span>
+      ${varStr ? '&nbsp;&nbsp;' + varStr : ''}
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--mono);font-size:12px;">
+      <span style="color:var(--text3)">Prom. mensual: </span>
+      <span style="color:var(--text)">${promMensual} ventas</span>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--mono);font-size:12px;">
+      <span style="color:var(--text3)">Mejor mes: </span>
+      <span style="color:var(--blue);font-weight:500">${mejorMes && mejorMes.cantTotal > 0 ? mejorMes.cantTotal + ' (' + mejorMes.label + ')' : '---'}</span>
     </div>
   `;
-
-  // Chips de totales anuales debajo
-  if (totalesEl) {
-    totalesEl.innerHTML = ciclos.map(c => {
-      const { totalMonto, totalCant } = totCiclo[c];
-      return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;font-family:var(--mono);font-size:12px;display:flex;flex-direction:column;gap:3px;">
-        <span style="font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;">${c}–${(c+1).toString().slice(2)}</span>
-        <span style="color:var(--green);font-size:15px;font-weight:500;">${fmt(totalMonto)}</span>
-        <span style="color:var(--blue);font-size:12px;">${totalCant.toLocaleString('es-AR')} ventas</span>
-      </div>`;
-    }).join('');
-  }
 }
 
 // ══ ESTADÍSTICAS ══
