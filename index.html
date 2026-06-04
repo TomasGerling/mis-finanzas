@@ -1361,7 +1361,7 @@ async function loadAll(){
   try{
     const[{data:est},{data:ventas},{data:gd},{data:boletas},{data:fijos}]=await Promise.all([
       sb.from('estado').select('*').single(),
-      sb.from('ventas').select('*').order('fecha',{ascending:false}),
+      sb.from('ventas').select('*').order('fecha',{ascending:false}).limit(10000),
       sb.from('gastos_diarios').select('*').order('fecha',{ascending:false}),
       sb.from('boletas').select('*').order('vence'),
       sb.from('gastos_fijos').select('*').order('id'),
